@@ -1,16 +1,34 @@
 <template>
   <div :class="{ 'dark-mode': darkMode }">
     <!-- Navbar -->
-    <nav class="navbar">
-      <div class="navbar-brand">Sistema de Monitoreo</div>
-      <div class="navbar-links">
-        <!-- <router-link to="/" class="nav-link">Eventos</router-link> -->
-        <router-link to="/cameras" class="nav-link">Eventos</router-link>
-        <router-link to="/users" class="nav-link">Usuarios</router-link>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+      <div class="container-fluid">
+        <router-link to="/" class="navbar-brand">Sistema de Monitoreo</router-link>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <router-link to="/eventos" class="nav-link">Eventos</router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/users" class="nav-link">Usuarios</router-link>
+            </li>
+          </ul>
+          <button @click="toggleDarkMode" class="btn btn-outline-light">
+            {{ darkMode ? 'Modo Claro' : 'Modo Oscuro' }}
+          </button>
+        </div>
       </div>
-      <button @click="toggleDarkMode" class="toggle-dark-mode">
-        {{ darkMode ? 'Modo Claro' : 'Modo Oscuro' }}
-      </button>
     </nav>
 
     <!-- Contenido dinámico -->
@@ -35,57 +53,6 @@ body {
   font-family: Arial, sans-serif;
 }
 
-/* Navbar */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  background-color: #007bff;
-  color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.navbar-brand {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-.navbar-links {
-  display: flex;
-  gap: 1rem;
-}
-
-.nav-link {
-  color: white;
-  text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  transition: background-color 0.3s;
-}
-
-.nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.nav-link.router-link-exact-active {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.toggle-dark-mode {
-  background-color: #333;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.toggle-dark-mode:hover {
-  background-color: #555;
-}
-
 /* Modo oscuro */
 .dark-mode {
   background-color: #121212;
@@ -93,6 +60,20 @@ body {
 }
 
 .dark-mode .navbar {
-  background-color: #1e1e1e;
+  background-color: #1e1e1e !important;
+}
+
+.dark-mode .navbar-brand,
+.dark-mode .nav-link {
+  color: white !important;
+}
+
+.dark-mode .btn-outline-light {
+  border-color: white;
+  color: white;
+}
+
+.dark-mode .btn-outline-light:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 </style>

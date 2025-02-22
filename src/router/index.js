@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import CameraList from '@/components/CameraList.vue';
+import Eventos from '@/components/Eventos.vue';
 import UserManagement from '@/components/UserManagement.vue';
-import EventView from '@/components/EventView.vue'; // Tu componente actual
+import HomeView from '../views/HomeView.vue'; // Tu componente actual
 
 const routes = [
-  { path: '/', component: EventView }, // Ruta por defecto
-  { path: '/cameras', component: CameraList },
+  { path: '/', component: HomeView }, // Ruta por defecto
+  { path: '/eventos', component: Eventos },
   { path: '/users', component: UserManagement },
 ];
 

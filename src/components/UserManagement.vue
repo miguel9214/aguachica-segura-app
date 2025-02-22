@@ -1,50 +1,54 @@
 <template>
   <div class="container mt-5">
-    <h1 class="mb-4">Gestión de Usuarios</h1>
+    <h1 class="mb-4 text-center">Gestión de Usuarios</h1>
 
     <!-- Botón para abrir el modal de creación -->
-    <button class="btn btn-primary mb-4" @click="openCreateModal">
-      Crear Usuario
-    </button>
+    <div class="d-flex justify-content-end mb-4">
+      <button class="btn btn-primary" @click="openCreateModal">
+        <i class="fas fa-plus me-2"></i>Crear Usuario
+      </button>
+    </div>
 
     <!-- Tabla de usuarios -->
-    <table class="table table-striped table-hover">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Cédula</th>
-          <th>Teléfono</th>
-          <th>Email</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="user in users" :key="user.id">
-          <td>{{ user.name }}</td>
-          <td>{{ user.cedula }}</td>
-          <td>{{ user.phone }}</td>
-          <td>{{ user.email }}</td>
-          <td>
-            <button class="btn btn-sm btn-warning me-2" @click="openEditModal(user)">
-              Editar
-            </button>
-            <button class="btn btn-sm btn-danger" @click="deleteUser(user.id)">
-              Eliminar
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-responsive">
+      <table class="table table-striped table-hover table-bordered">
+        <thead class="table-dark">
+          <tr>
+            <th>Nombre</th>
+            <th>Cédula</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="user in users" :key="user.id">
+            <td>{{ user.name }}</td>
+            <td>{{ user.cedula }}</td>
+            <td>{{ user.phone }}</td>
+            <td>{{ user.email }}</td>
+            <td>
+              <button class="btn btn-sm btn-warning me-2" @click="openEditModal(user)">
+                <i class="fas fa-edit me-1"></i>Editar
+              </button>
+              <button class="btn btn-sm btn-danger" @click="deleteUser(user.id)">
+                <i class="fas fa-trash me-1"></i>Eliminar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- Modal para crear/editar usuario -->
     <div class="modal fade" :class="{ show: isModalOpen }" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header">
+          <div class="modal-header bg-primary text-white">
             <h5 class="modal-title">
               {{ isEditing ? 'Editar Usuario' : 'Crear Usuario' }}
             </h5>
-            <button type="button" class="btn-close" @click="closeModal"></button>
+            <button type="button" class="btn-close btn-close-white" @click="closeModal"></button>
           </div>
           <div class="modal-body">
             <form @submit.prevent="saveUser">
@@ -108,9 +112,12 @@
                   required
                 />
               </div>
-              <button type="submit" class="btn btn-primary">
-                {{ isEditing ? 'Guardar Cambios' : 'Crear Usuario' }}
-              </button>
+              <div class="d-grid">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save me-2"></i>
+                  {{ isEditing ? 'Guardar Cambios' : 'Crear Usuario' }}
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -233,5 +240,55 @@ watch(isModalOpen, (newValue) => {
 }
 .modal.show {
   display: block;
+}
+
+.table-responsive {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.table thead th {
+  background-color: #343a40;
+  color: white;
+}
+
+.table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.btn-warning {
+  background-color: #ffc107;
+  border-color: #ffc107;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.modal-header {
+  background-color: #007bff;
+  color: white;
+}
+
+.modal-content {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 </style>
