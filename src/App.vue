@@ -23,7 +23,12 @@
             <li class="nav-item">
               <router-link to="/users" class="nav-link">Usuarios</router-link>
             </li>
+            <li class="nav-item">
+              <router-link to="/barrios" class="nav-link">Barrios</router-link>
+            </li>
           </ul>
+
+          
           <button @click="toggleDarkMode" class="btn btn-outline-light">
             {{ darkMode ? 'Modo Claro' : 'Modo Oscuro' }}
           </button>

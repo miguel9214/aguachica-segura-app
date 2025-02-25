@@ -2,6 +2,16 @@
   <div class="container mt-5">
     <h1 class="mb-4 text-center">Gestión de Usuarios</h1>
 
+    <!-- Campo de búsqueda -->
+    <div class="mb-4">
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Buscar usuario..."
+        v-model="searchQuery"
+      />
+    </div>
+
     <!-- Botón para abrir el modal de creación -->
     <div class="d-flex justify-content-end mb-4">
       <button class="btn btn-primary" @click="openCreateModal">
@@ -18,15 +28,17 @@
             <th>Cédula</th>
             <th>Teléfono</th>
             <th>Email</th>
+            <th>ID de Dispositivo</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="user in users" :key="user.id">
+          <tr v-for="user in filteredUsers" :key="user.id">
             <td>{{ user.name }}</td>
             <td>{{ user.cedula }}</td>
             <td>{{ user.phone }}</td>
             <td>{{ user.email }}</td>
+            <td>{{ user.deviceId }}</td>
             <td>
               <button class="btn btn-sm btn-warning me-2" @click="openEditModal(user)">
                 <i class="fas fa-edit me-1"></i>Editar
@@ -112,6 +124,39 @@
                   required
                 />
               </div>
+              <div class="mb-3">
+                <label for="deviceId" class="form-label">ID de Dispositivo</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="deviceId"
+                  v-model="currentUser.deviceId"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="neighborhood" class="form-label">Barrio</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="neighborhood"
+                  v-model="neighborhoodQuery"
+                  @input="filterNeighborhoods"
+                  placeholder="Buscar barrio..."
+                  required
+                />
+                <ul class="list-group mt-2" v-if="filteredNeighborhoods.length > 0">
+                  <li
+                    class="list-group-item"
+                    v-for="neighborhood in filteredNeighborhoods"
+                    :key="neighborhood.id"
+                    @click="selectNeighborhood(neighborhood)"
+                    style="cursor: pointer;"
+                  >
+                    {{ neighborhood.name }}
+                  </li>
+                </ul>
+              </div>
               <div class="d-grid">
                 <button type="submit" class="btn btn-primary">
                   <i class="fas fa-save me-2"></i>
@@ -127,7 +172,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 
 // Datos de ejemplo para usuarios
 const users = ref([
@@ -139,6 +184,8 @@ const users = ref([
     email: 'juan@example.com',
     address: 'Calle 123 #45-67',
     coordinates: '4.7110,-74.0721',
+    deviceId: 'DEV001',
+    neighborhood: 'Barrio Centro',
     createdAt: '2023-10-25',
   },
   {
@@ -149,8 +196,19 @@ const users = ref([
     email: 'maria@example.com',
     address: 'Carrera 45 #67-89',
     coordinates: '4.6980,-74.0431',
+    deviceId: 'DEV002',
+    neighborhood: 'Barrio Norte',
     createdAt: '2023-10-26',
   },
+]);
+
+// Datos de ejemplo para barrios
+const neighborhoods = ref([
+  { id: 1, name: 'Barrio Centro' },
+  { id: 2, name: 'Barrio Norte' },
+  { id: 3, name: 'Barrio Sur' },
+  { id: 4, name: 'Barrio Este' },
+  { id: 5, name: 'Barrio Oeste' },
 ]);
 
 // Estado del modal y del usuario actual
@@ -164,8 +222,45 @@ const currentUser = ref({
   email: '',
   address: '',
   coordinates: '',
+  deviceId: '',
+  neighborhood: '',
   createdAt: '',
 });
+
+// Campo de búsqueda
+const searchQuery = ref('');
+const neighborhoodQuery = ref('');
+const filteredNeighborhoods = ref([]);
+
+// Filtrar usuarios según la búsqueda
+const filteredUsers = computed(() => {
+  return users.value.filter(user => {
+    return (
+      user.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      user.cedula.includes(searchQuery.value) ||
+      user.email.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      user.deviceId.toLowerCase().includes(searchQuery.value.toLowerCase())
+    );
+  });
+});
+
+// Filtrar barrios según la búsqueda
+const filterNeighborhoods = () => {
+  if (neighborhoodQuery.value === '') {
+    filteredNeighborhoods.value = [];
+  } else {
+    filteredNeighborhoods.value = neighborhoods.value.filter(neighborhood =>
+      neighborhood.name.toLowerCase().includes(neighborhoodQuery.value.toLowerCase())
+    );
+  }
+};
+
+// Seleccionar barrio
+const selectNeighborhood = (neighborhood) => {
+  currentUser.value.neighborhood = neighborhood.name;
+  neighborhoodQuery.value = neighborhood.name;
+  filteredNeighborhoods.value = [];
+};
 
 // Abrir modal para crear usuario
 const openCreateModal = () => {
@@ -178,8 +273,11 @@ const openCreateModal = () => {
     email: '',
     address: '',
     coordinates: '',
+    deviceId: '',
+    neighborhood: '',
     createdAt: new Date().toISOString().split('T')[0], // Fecha actual
   };
+  neighborhoodQuery.value = '';
   isModalOpen.value = true;
 };
 
@@ -187,6 +285,7 @@ const openCreateModal = () => {
 const openEditModal = (user) => {
   isEditing.value = true;
   currentUser.value = { ...user };
+  neighborhoodQuery.value = user.neighborhood;
   isModalOpen.value = true;
 };
 
@@ -290,5 +389,9 @@ watch(isModalOpen, (newValue) => {
 .modal-content {
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.list-group-item:hover {
+  background-color: #f8f9fa;
 }
 </style>
