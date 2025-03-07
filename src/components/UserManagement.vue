@@ -33,7 +33,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="user in filteredUsers" :key="user.id">
+          <tr v-for="user in paginatedUsers" :key="user.id">
             <td>{{ user.name }}</td>
             <td>{{ user.cedula }}</td>
             <td>{{ user.phone }}</td>
@@ -51,6 +51,21 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Controles de paginación -->
+    <nav aria-label="Page navigation">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+          <a class="page-link" href="#" @click.prevent="prevPage">Anterior</a>
+        </li>
+        <li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: currentPage === page }">
+          <a class="page-link" href="#" @click.prevent="goToPage(page)">{{ page }}</a>
+        </li>
+        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+          <a class="page-link" href="#" @click.prevent="nextPage">Siguiente</a>
+        </li>
+      </ul>
+    </nav>
 
     <!-- Modal para crear/editar usuario -->
     <div class="modal fade" :class="{ show: isModalOpen }" tabindex="-1" aria-hidden="true">
@@ -232,6 +247,10 @@ const searchQuery = ref('');
 const neighborhoodQuery = ref('');
 const filteredNeighborhoods = ref([]);
 
+// Variables de paginación
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
+
 // Filtrar usuarios según la búsqueda
 const filteredUsers = computed(() => {
   return users.value.filter(user => {
@@ -243,6 +262,35 @@ const filteredUsers = computed(() => {
     );
   });
 });
+
+// Computed property para usuarios paginados
+const paginatedUsers = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return filteredUsers.value.slice(start, end);
+});
+
+// Computed property para el número total de páginas
+const totalPages = computed(() => {
+  return Math.ceil(filteredUsers.value.length / itemsPerPage.value);
+});
+
+// Métodos para la paginación
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+};
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+  }
+};
+
+const goToPage = (page) => {
+  currentPage.value = page;
+};
 
 // Filtrar barrios según la búsqueda
 const filterNeighborhoods = () => {
@@ -393,5 +441,22 @@ watch(isModalOpen, (newValue) => {
 
 .list-group-item:hover {
   background-color: #f8f9fa;
+}
+
+.pagination {
+  margin-top: 20px;
+}
+
+.page-item.active .page-link {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.page-link {
+  color: #007bff;
+}
+
+.page-link:hover {
+  color: #0056b3;
 }
 </style>
