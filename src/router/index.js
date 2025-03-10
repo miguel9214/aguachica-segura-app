@@ -5,6 +5,7 @@ import UserManagement from "../components/UserManagement.vue";
 import Barrios from "../components/Barrios.vue";
 import HomeView from "../views/HomeView.vue";
 import ListaDispositivos from "../components/ListaDispositivos.vue";
+import Mapa from "../components/Mapa.vue";
 
 const routes = [
   { path: "/", component: LoginView }, // Login como página principal
@@ -13,6 +14,7 @@ const routes = [
   { path: "/users", component: UserManagement, meta: { requiresAuth: true } },
   { path: "/barrios", component: Barrios, meta: { requiresAuth: true } },
   { path: "/dispositivos", component: ListaDispositivos, meta: { requiresAuth: true } },
+  { path: "/mapa", component: Mapa, meta: { requiresAuth: true } },
   { path: "/login-success", component: LoginView },
 ];
 

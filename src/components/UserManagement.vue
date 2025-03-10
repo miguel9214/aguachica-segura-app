@@ -155,22 +155,9 @@
                   type="text"
                   class="form-control"
                   id="neighborhood"
-                  v-model="neighborhoodQuery"
-                  @input="filterNeighborhoods"
-                  placeholder="Buscar barrio..."
+                  v-model="currentUser.neighborhood"
                   required
                 />
-                <ul class="list-group mt-2" v-if="filteredNeighborhoods.length > 0">
-                  <li
-                    class="list-group-item"
-                    v-for="neighborhood in filteredNeighborhoods"
-                    :key="neighborhood.id"
-                    @click="selectNeighborhood(neighborhood)"
-                    style="cursor: pointer;"
-                  >
-                    {{ neighborhood.name }}
-                  </li>
-                </ul>
               </div>
               <div class="d-grid">
                 <button type="submit" class="btn btn-primary">
@@ -187,44 +174,11 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
+import axios from 'axios';
 
-// Datos de ejemplo para usuarios
-const users = ref([
-  {
-    id: 1,
-    name: 'Juan Pérez',
-    cedula: '123456789',
-    phone: '3001234567',
-    email: 'juan@example.com',
-    address: 'Calle 123 #45-67',
-    coordinates: '4.7110,-74.0721',
-    deviceId: 'DEV001',
-    neighborhood: 'Barrio Centro',
-    createdAt: '2023-10-25',
-  },
-  {
-    id: 2,
-    name: 'María Gómez',
-    cedula: '987654321',
-    phone: '3109876543',
-    email: 'maria@example.com',
-    address: 'Carrera 45 #67-89',
-    coordinates: '4.6980,-74.0431',
-    deviceId: 'DEV002',
-    neighborhood: 'Barrio Norte',
-    createdAt: '2023-10-26',
-  },
-]);
-
-// Datos de ejemplo para barrios
-const neighborhoods = ref([
-  { id: 1, name: 'Barrio Centro' },
-  { id: 2, name: 'Barrio Norte' },
-  { id: 3, name: 'Barrio Sur' },
-  { id: 4, name: 'Barrio Este' },
-  { id: 5, name: 'Barrio Oeste' },
-]);
+// Estado de los usuarios
+const users = ref([]);
 
 // Estado del modal y del usuario actual
 const isModalOpen = ref(false);
@@ -239,13 +193,10 @@ const currentUser = ref({
   coordinates: '',
   deviceId: '',
   neighborhood: '',
-  createdAt: '',
 });
 
 // Campo de búsqueda
 const searchQuery = ref('');
-const neighborhoodQuery = ref('');
-const filteredNeighborhoods = ref([]);
 
 // Variables de paginación
 const currentPage = ref(1);
@@ -292,24 +243,6 @@ const goToPage = (page) => {
   currentPage.value = page;
 };
 
-// Filtrar barrios según la búsqueda
-const filterNeighborhoods = () => {
-  if (neighborhoodQuery.value === '') {
-    filteredNeighborhoods.value = [];
-  } else {
-    filteredNeighborhoods.value = neighborhoods.value.filter(neighborhood =>
-      neighborhood.name.toLowerCase().includes(neighborhoodQuery.value.toLowerCase())
-    );
-  }
-};
-
-// Seleccionar barrio
-const selectNeighborhood = (neighborhood) => {
-  currentUser.value.neighborhood = neighborhood.name;
-  neighborhoodQuery.value = neighborhood.name;
-  filteredNeighborhoods.value = [];
-};
-
 // Abrir modal para crear usuario
 const openCreateModal = () => {
   isEditing.value = false;
@@ -323,9 +256,7 @@ const openCreateModal = () => {
     coordinates: '',
     deviceId: '',
     neighborhood: '',
-    createdAt: new Date().toISOString().split('T')[0], // Fecha actual
   };
-  neighborhoodQuery.value = '';
   isModalOpen.value = true;
 };
 
@@ -333,7 +264,6 @@ const openCreateModal = () => {
 const openEditModal = (user) => {
   isEditing.value = true;
   currentUser.value = { ...user };
-  neighborhoodQuery.value = user.neighborhood;
   isModalOpen.value = true;
 };
 
@@ -343,25 +273,71 @@ const closeModal = () => {
 };
 
 // Guardar o actualizar usuario
-const saveUser = () => {
-  if (isEditing.value) {
-    // Actualizar usuario existente
-    const index = users.value.findIndex((u) => u.id === currentUser.value.id);
-    if (index !== -1) {
-      users.value[index] = { ...currentUser.value };
+const saveUser = async () => {
+  try {
+    const url = 'http://127.0.0.1:8000/api/users'; // URL de la API
+    const method = isEditing.value ? 'PUT' : 'POST'; // Método HTTP
+    const endpoint = isEditing.value ? `${url}/${currentUser.value.id}` : url; // Endpoint
+
+    // Enviar la solicitud a la API
+    const response = await axios({
+      method: method,
+      url: endpoint,
+      data: currentUser.value,
+    });
+
+    if (response.status === 200 || response.status === 201) {
+      // Actualizar la lista de usuarios en el frontend
+      if (isEditing.value) {
+        const index = users.value.findIndex((u) => u.id === currentUser.value.id);
+        if (index !== -1) {
+          users.value[index] = response.data.user;
+        }
+      } else {
+        users.value.push(response.data.user);
+      }
+
+      closeModal();
     }
-  } else {
-    // Crear nuevo usuario
-    currentUser.value.id = users.value.length + 1;
-    users.value.push({ ...currentUser.value });
+  } catch (error) {
+    console.error('Error al guardar el usuario:', error);
+    alert('Hubo un error al guardar el usuario. Por favor, inténtalo de nuevo.');
   }
-  closeModal();
 };
 
 // Eliminar usuario
-const deleteUser = (userId) => {
-  users.value = users.value.filter((user) => user.id !== userId);
+const deleteUser = async (userId) => {
+  try {
+    const url = `http://127.0.0.1:8000/api/users/${userId}`; // URL de la API
+
+    // Enviar la solicitud a la API
+    const response = await axios.delete(url);
+
+    if (response.status === 200) {
+      // Eliminar el usuario de la lista en el frontend
+      users.value = users.value.filter((user) => user.id !== userId);
+    }
+  } catch (error) {
+    console.error('Error al eliminar el usuario:', error);
+    alert('Hubo un error al eliminar el usuario. Por favor, inténtalo de nuevo.');
+  }
 };
+
+// Cargar usuarios al iniciar
+const fetchUsers = async () => {
+  try {
+    const url = 'http://127.0.0.1:8000/api/users'; // URL de la API
+    const response = await axios.get(url);
+    users.value = response.data; // Actualizar la lista de usuarios
+  } catch (error) {
+    console.error('Error al cargar los usuarios:', error);
+    alert('Hubo un error al cargar los usuarios. Por favor, inténtalo de nuevo.');
+  }
+};
+
+onMounted(() => {
+  fetchUsers();
+});
 
 // Cerrar modal al hacer clic fuera del modal
 const handleClickOutside = (event) => {
@@ -437,10 +413,6 @@ watch(isModalOpen, (newValue) => {
 .modal-content {
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.list-group-item:hover {
-  background-color: #f8f9fa;
 }
 
 .pagination {

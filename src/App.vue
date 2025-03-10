@@ -20,6 +20,9 @@
             <li class="nav-item">
               <router-link to="/dispositivos" class="nav-link">Dispositivos</router-link>
             </li>
+            <li class="nav-item">
+              <router-link to="/mapa" class="nav-link">Mapa</router-link>
+            </li>
           </ul>
 
           <button @click="toggleDarkMode" class="btn btn-outline-light">
