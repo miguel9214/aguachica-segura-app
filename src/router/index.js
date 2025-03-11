@@ -23,15 +23,15 @@ const router = createRouter({
   routes,
 });
 
-// 🔹 Middleware para proteger rutas
-router.beforeEach((to, from, next) => {
-  const isAuthenticated = localStorage.getItem("accessToken");
+// // 🔹 Middleware para proteger rutas
+// router.beforeEach((to, from, next) => {
+//   const isAuthenticated = localStorage.getItem("accessToken");
 
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next("/");
-  } else {
-    next();
-  }
-});
+//   if (to.meta.requiresAuth && !isAuthenticated) {
+//     next("/");
+//   } else {
+//     next();
+//   }
+// });
 
 export default router;

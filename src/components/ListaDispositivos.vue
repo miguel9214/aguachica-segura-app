@@ -95,6 +95,7 @@ import { ref, onMounted, computed, onUnmounted } from "vue";
 import axios from "axios";
 
 const devices = ref([]);
+const previousDevices = ref([]); // Almacenar el estado anterior de los dispositivos
 const loading = ref(true);
 const error = ref(null);
 const searchQuery = ref("");
@@ -107,7 +108,20 @@ const itemsPerPage = ref(10);
 const fetchDevices = async () => {
   try {
     const response = await axios.get("http://127.0.0.1:8000/devices");
-    devices.value = response.data;
+    const newDevices = response.data;
+
+    // Comparar el estado anterior con el nuevo estado
+    newDevices.forEach((newDevice, index) => {
+      const oldDevice = previousDevices.value[index];
+      if (oldDevice && oldDevice.switchStatus === 'off' && newDevice.switchStatus === 'on') {
+        // El dispositivo ha cambiado a "on"
+        sendTelegramMessage(newDevice);
+      }
+    });
+
+    // Actualizar el estado anterior
+    previousDevices.value = newDevices;
+    devices.value = newDevices;
   } catch (err) {
     if (err.response && err.response.status === 401) {
       // Redirigir a la página de inicio de sesión
@@ -118,6 +132,26 @@ const fetchDevices = async () => {
     }
   } finally {
     loading.value = false;
+  }
+};
+
+// Función para enviar un mensaje a Telegram
+const sendTelegramMessage = async (device) => {
+  const url = "https://api.telegram.org/bot7064383758:AAF7NXbJ78DqVM9vc82qMRXLMjePtIpRbF4/sendMessage";
+  const message = {
+    chat_id: "-1002423016491",
+    text: `${device.name} ha activado alarma el ${new Date().toLocaleString()}. Ubicación: https://www.google.com/maps?q=8.3090664,-73.6047486`
+  };
+
+  try {
+    await axios.post(url, message, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    console.log("Mensaje enviado a Telegram");
+  } catch (error) {
+    console.error("Error al enviar mensaje a Telegram:", error);
   }
 };
 

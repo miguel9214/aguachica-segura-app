@@ -27,7 +27,7 @@ const redMarkers = [
 ];
 
 onMounted(() => {
-  const map = L.map('map').setView([8.3124, -73.6181], 13);
+  const map = L.map('map').setView([8.3060, -73.6181], 14);
 
   // Capas base
   const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
