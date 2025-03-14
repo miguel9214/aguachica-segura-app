@@ -111,7 +111,7 @@ const fetchDevices = async () => {
   try {
     const response = await axios.get("http://127.0.0.1:8000/devices");
     console.log("Respuesta original:", response.data);
-
+    
     if (response.data.error === 0 && response.data.devices) {
       // Transformar los datos al formato que espera el componente
       const transformedDevices = response.data.devices.map(device => ({
@@ -122,9 +122,9 @@ const fetchDevices = async () => {
         type: device.type,
         model: device.model
       }));
-
+      
       console.log("Dispositivos transformados:", transformedDevices);
-
+      
       // Comparar el estado anterior con el nuevo estado para notificaciones
       transformedDevices.forEach((newDevice) => {
         const oldDevice = previousDevices.value.find(d => d.id === newDevice.id);
@@ -133,7 +133,7 @@ const fetchDevices = async () => {
           sendTelegramMessage(newDevice);
         }
       });
-
+      
       // Actualizar el estado anterior y actual
       previousDevices.value = transformedDevices;
       devices.value = transformedDevices;
@@ -173,51 +173,34 @@ const sendTelegramMessage = async (device) => {
   }
 };
 
-// Configuración de WebSocket
-let ws;
+// Intervalo para refrescar los datos cada 5 segundos
+let intervalId;
 
 onMounted(() => {
-  fetchDevices(); // Llamada inicial para cargar los dispositivos
-
-  // Conectar al servidor WebSocket
-  ws = new WebSocket('ws://127.0.0.1:8000');
-
-  ws.onopen = () => {
-    console.log('Conexión WebSocket establecida');
-  };
-
+  fetchDevices(); // Llamada inicial
+  intervalId = setInterval(fetchDevices, 5000); // Refrescar cada 5 segundos
+  
+  // Comentado el código WebSocket porque parece que no está configurado en el servidor
+  /* 
+  const ws = new WebSocket('ws://localhost:8080');
   ws.onmessage = (event) => {
     const devicesData = JSON.parse(event.data);
-    console.log('Datos recibidos por WebSocket:', devicesData);
-
-    // Actualizar la lista de dispositivos
-    const transformedDevices = devicesData.devices.map(device => ({
-      id: device.id,
-      name: device.name,
-      online: device.online ? "✅ Conectado" : "❌ Desconectado",
-      state: device.state,
-      type: device.type,
-      model: device.model
-    }));
-
-    // Actualizar el estado reactivo de Vue
-    devices.value = transformedDevices;
+    devices.value = devicesData;
   };
 
   ws.onerror = (error) => {
-    console.error('Error en WebSocket:', error);
+    console.error('WebSocket error:', error);
   };
 
   ws.onclose = () => {
-    console.log('Conexión WebSocket cerrada');
+    console.log('WebSocket connection closed');
   };
+  */
 });
 
-// Limpiar la conexión WebSocket cuando el componente se desmonta
+// Limpiar el intervalo cuando el componente se desmonta
 onUnmounted(() => {
-  if (ws) {
-    ws.close();
-  }
+  clearInterval(intervalId);
 });
 
 // Computed property para filtrar dispositivos
