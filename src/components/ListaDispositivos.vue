@@ -44,12 +44,13 @@
                 {{ sortOrder === 'asc' ? '▲' : '▼' }}
               </span>
             </th>
-            <th scope="col" @click="sortByField('switchStatus')">
+            <th scope="col" @click="sortByField('state')">
               ESTADO
-              <span v-if="sortField === 'switchStatus'">
+              <span v-if="sortField === 'state'">
                 {{ sortOrder === 'asc' ? '▲' : '▼' }}
               </span>
             </th>
+            <th scope="col">MODELO</th>
           </tr>
         </thead>
         <tbody>
@@ -66,8 +67,9 @@
               </span>
             </td>
             <td>
-              {{ device.switchStatus === 'on' ? 'Encendido' : 'Apagado' }}
+              {{ device.state === 'on' ? 'Encendido' : 'Apagado' }}
             </td>
+            <td>{{ device.model }}</td>
           </tr>
         </tbody>
       </table>
@@ -108,20 +110,36 @@ const itemsPerPage = ref(10);
 const fetchDevices = async () => {
   try {
     const response = await axios.get("http://127.0.0.1:8000/devices");
-    const newDevices = response.data;
+    console.log("Respuesta original:", response.data);
 
-    // Comparar el estado anterior con el nuevo estado
-    newDevices.forEach((newDevice, index) => {
-      const oldDevice = previousDevices.value[index];
-      if (oldDevice && oldDevice.switchStatus === 'off' && newDevice.switchStatus === 'on') {
-        // El dispositivo ha cambiado a "on"
-        sendTelegramMessage(newDevice);
-      }
-    });
+    if (response.data.error === 0 && response.data.devices) {
+      // Transformar los datos al formato que espera el componente
+      const transformedDevices = response.data.devices.map(device => ({
+        id: device.id,
+        name: device.name,
+        online: device.online ? "✅ Conectado" : "❌ Desconectado",
+        state: device.state,
+        type: device.type,
+        model: device.model
+      }));
 
-    // Actualizar el estado anterior
-    previousDevices.value = newDevices;
-    devices.value = newDevices;
+      console.log("Dispositivos transformados:", transformedDevices);
+
+      // Comparar el estado anterior con el nuevo estado para notificaciones
+      transformedDevices.forEach((newDevice) => {
+        const oldDevice = previousDevices.value.find(d => d.id === newDevice.id);
+        if (oldDevice && oldDevice.state === 'off' && newDevice.state === 'on') {
+          // El dispositivo ha cambiado a "on"
+          sendTelegramMessage(newDevice);
+        }
+      });
+
+      // Actualizar el estado anterior y actual
+      previousDevices.value = transformedDevices;
+      devices.value = transformedDevices;
+    } else {
+      error.value = "Error en los datos recibidos: " + (response.data.msg || "Formato inesperado");
+    }
   } catch (err) {
     if (err.response && err.response.status === 401) {
       // Redirigir a la página de inicio de sesión
@@ -155,31 +173,51 @@ const sendTelegramMessage = async (device) => {
   }
 };
 
-// Intervalo para refrescar los datos cada 1 segundo
-let intervalId;
+// Configuración de WebSocket
+let ws;
 
 onMounted(() => {
-  const ws = new WebSocket('ws://localhost:8080');
+  fetchDevices(); // Llamada inicial para cargar los dispositivos
+
+  // Conectar al servidor WebSocket
+  ws = new WebSocket('ws://127.0.0.1:8000');
+
+  ws.onopen = () => {
+    console.log('Conexión WebSocket establecida');
+  };
+
   ws.onmessage = (event) => {
     const devicesData = JSON.parse(event.data);
-    devices.value = devicesData;
+    console.log('Datos recibidos por WebSocket:', devicesData);
+
+    // Actualizar la lista de dispositivos
+    const transformedDevices = devicesData.devices.map(device => ({
+      id: device.id,
+      name: device.name,
+      online: device.online ? "✅ Conectado" : "❌ Desconectado",
+      state: device.state,
+      type: device.type,
+      model: device.model
+    }));
+
+    // Actualizar el estado reactivo de Vue
+    devices.value = transformedDevices;
   };
 
   ws.onerror = (error) => {
-    console.error('WebSocket error:', error);
+    console.error('Error en WebSocket:', error);
   };
 
   ws.onclose = () => {
-    console.log('WebSocket connection closed');
+    console.log('Conexión WebSocket cerrada');
   };
-
-  fetchDevices(); // Llamada inicial
-  intervalId = setInterval(fetchDevices, 1000); // Refrescar cada 1 segundo
 });
 
-// Limpiar el intervalo cuando el componente se desmonta
+// Limpiar la conexión WebSocket cuando el componente se desmonta
 onUnmounted(() => {
-  clearInterval(intervalId);
+  if (ws) {
+    ws.close();
+  }
 });
 
 // Computed property para filtrar dispositivos
@@ -200,15 +238,17 @@ const sortedDevices = computed(() => {
         ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name);
     } else if (sortField.value === "id") {
-      return sortOrder.value === "asc" ? a.id - b.id : b.id - a.id;
+      return sortOrder.value === "asc" 
+        ? a.id.localeCompare(b.id)
+        : b.id.localeCompare(a.id);
     } else if (sortField.value === "online") {
       return sortOrder.value === "asc"
         ? a.online.localeCompare(b.online)
         : b.online.localeCompare(a.online);
-    } else if (sortField.value === "switchStatus") {
+    } else if (sortField.value === "state") {
       return sortOrder.value === "asc"
-        ? a.switchStatus.localeCompare(b.switchStatus)
-        : b.switchStatus.localeCompare(a.switchStatus);
+        ? (a.state === 'on' ? 1 : 0) - (b.state === 'on' ? 1 : 0)
+        : (b.state === 'on' ? 1 : 0) - (a.state === 'on' ? 1 : 0);
     }
     return 0;
   });
@@ -223,7 +263,7 @@ const paginatedDevices = computed(() => {
 
 // Computed property para el número total de páginas
 const totalPages = computed(() => {
-  return Math.ceil(sortedDevices.value.length / itemsPerPage.value);
+  return Math.ceil(sortedDevices.value.length / itemsPerPage.value) || 1;
 });
 
 // Función para ordenar por campo
@@ -238,7 +278,7 @@ const sortByField = (field) => {
 
 // Función para determinar el color de la fila
 const getRowClass = (device) => {
-  if (device.switchStatus === 'on') {
+  if (device.state === 'on') {
     return "table-success"; // Fila verde para dispositivos encendidos
   } else if (device.online === '❌ Desconectado') {
     return "table-danger"; // Fila roja para dispositivos desconectados
