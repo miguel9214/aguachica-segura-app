@@ -54,23 +54,63 @@
           </tr>
         </thead>
         <tbody>
-          <tr
-            v-for="device in paginatedDevices"
-            :key="device.id"
-            :class="getRowClass(device)"
-          >
-            <td>{{ device.name }}</td>
-            <td>{{ device.id }}</td>
-            <td>
-              <span :class="device.online === '✅ Conectado' ? 'text-success' : 'text-danger'">
-                {{ device.online }}
-              </span>
-            </td>
-            <td>
-              {{ device.state === 'on' ? 'Encendido' : 'Apagado' }}
-            </td>
-            <td>{{ device.model }}</td>
-          </tr>
+          <template v-for="device in paginatedDevices" :key="device.id">
+            <!-- Fila principal del dispositivo -->
+            <tr
+              :class="getRowClass(device)"
+              @click="toggleChannels(device.id)"
+              style="cursor: pointer;"
+            >
+              <td>{{ device.name }}</td>
+              <td>{{ device.id }}</td>
+              <td>
+                <span :class="device.online === '✅ Conectado' ? 'text-success' : 'text-danger'">
+                  {{ device.online }}
+                </span>
+              </td>
+              <td>
+                {{ getDeviceState(device) }}
+              </td>
+              <td>{{ device.model }}</td>
+            </tr>
+
+            <!-- Fila adicional para dispositivos de 3 vías -->
+            <tr
+              v-if="device.type === 162 && device.channels && expandedDevices.includes(device.id)"
+              class="bg-light"
+            >
+              <td colspan="5">
+                <div class="p-2">
+                  <div class="d-flex gap-3">
+                    <div
+                      v-for="channel in device.channels"
+                      :key="channel.channel"
+                      :class="['channel', 'p-2', 'border', 'rounded', { 'bg-success text-white': channel.state === 'on' }]"
+                    >
+                      <p class="mb-1"><strong>{{ channel.name || `Canal ${channel.channel}` }}</strong></p>
+                      <p>{{ channel.state === 'on' ? 'Encendido' : 'Apagado' }}</p>
+                      <div class="d-flex gap-2">
+                        <button
+                          class="btn btn-sm btn-success"
+                          @click.stop="controlChannel(device.id, channel.channel, 'on')"
+                          :disabled="!device.online"
+                        >
+                          Encender
+                        </button>
+                        <button
+                          class="btn btn-sm btn-danger"
+                          @click.stop="controlChannel(device.id, channel.channel, 'off')"
+                          :disabled="!device.online"
+                        >
+                          Apagar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </template>
         </tbody>
       </table>
 
@@ -105,13 +145,14 @@ const sortField = ref("name"); // Campo por el que se ordena
 const sortOrder = ref("asc"); // Orden ascendente o descendente
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
+const expandedDevices = ref([]); // Almacenar los IDs de los dispositivos expandidos
 
 // Función para obtener los dispositivos
 const fetchDevices = async () => {
   try {
     const response = await axios.get("http://127.0.0.1:8000/devices");
     console.log("Respuesta original:", response.data);
-    
+
     if (response.data.error === 0 && response.data.devices) {
       // Transformar los datos al formato que espera el componente
       const transformedDevices = response.data.devices.map(device => ({
@@ -120,11 +161,12 @@ const fetchDevices = async () => {
         online: device.online ? "✅ Conectado" : "❌ Desconectado",
         state: device.state,
         type: device.type,
-        model: device.model
+        model: device.model,
+        channels: device.channels || [] // Agregar canales si existen
       }));
-      
+
       console.log("Dispositivos transformados:", transformedDevices);
-      
+
       // Comparar el estado anterior con el nuevo estado para notificaciones
       transformedDevices.forEach((newDevice) => {
         const oldDevice = previousDevices.value.find(d => d.id === newDevice.id);
@@ -133,7 +175,7 @@ const fetchDevices = async () => {
           sendTelegramMessage(newDevice);
         }
       });
-      
+
       // Actualizar el estado anterior y actual
       previousDevices.value = transformedDevices;
       devices.value = transformedDevices;
@@ -153,54 +195,97 @@ const fetchDevices = async () => {
   }
 };
 
-// Función para enviar un mensaje a Telegram
-const sendTelegramMessage = async (device) => {
-  const url = "https://api.telegram.org/bot7064383758:AAF7NXbJ78DqVM9vc82qMRXLMjePtIpRbF4/sendMessage";
-  const message = {
-    chat_id: "-1002423016491",
-    text: `${device.name} ha activado alarma el ${new Date().toLocaleString()}. Ubicación: https://www.google.com/maps?q=8.3090664,-73.6047486`
-  };
-
+// Función para controlar un canal de un dispositivo
+const controlChannel = async (deviceId, channel, newState) => {
   try {
-    await axios.post(url, message, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    console.log("Mensaje enviado a Telegram");
+    const params = {
+      switches: [{ switch: newState, outlet: channel - 1 }]
+    };
+    const response = await axios.post(`http://127.0.0.1:8000/control/${deviceId}`, params);
+    if (response.data.error === 0) {
+      fetchDevices(); // Recargar dispositivos para actualizar el estado
+    } else {
+      console.error("Error al controlar el dispositivo:", response.data.msg);
+    }
   } catch (error) {
-    console.error("Error al enviar mensaje a Telegram:", error);
+    console.error("Error de conexión con el servidor:", error);
   }
 };
 
-// Intervalo para refrescar los datos cada 5 segundos
-let intervalId;
+// Función para obtener el estado general del dispositivo
+const getDeviceState = (device) => {
+  if (device.type === 162 && device.channels) {
+    // Si es un dispositivo de 3 vías, el estado general es "Encendido" si al menos un canal está encendido
+    return device.channels.some(channel => channel.state === 'on') ? 'Encendido' : 'Apagado';
+  }
+  return device.state === 'on' ? 'Encendido' : 'Apagado';
+};
+
+// Función para determinar el color de la fila
+const getRowClass = (device) => {
+  if (getDeviceState(device) === 'Encendido') {
+    return "table-success"; // Fila verde si el dispositivo está encendido
+  } else if (device.online === '❌ Desconectado') {
+    return "table-danger"; // Fila roja si el dispositivo está desconectado
+  }
+  return ""; // Sin color adicional
+};
+
+// Función para mostrar/ocultar los canales de un dispositivo
+const toggleChannels = (deviceId) => {
+  if (expandedDevices.value.includes(deviceId)) {
+    expandedDevices.value = expandedDevices.value.filter(id => id !== deviceId);
+  } else {
+    expandedDevices.value.push(deviceId);
+  }
+};
+
+// Configuración de WebSocket
+let ws;
 
 onMounted(() => {
-  fetchDevices(); // Llamada inicial
-  intervalId = setInterval(fetchDevices, 5000); // Refrescar cada 5 segundos
-  
-  // Comentado el código WebSocket porque parece que no está configurado en el servidor
-  /* 
-  const ws = new WebSocket('ws://localhost:8080');
+  fetchDevices(); // Llamada inicial para cargar los dispositivos
+
+  // Conectar al servidor WebSocket
+  ws = new WebSocket('ws://127.0.0.1:8000');
+
+  ws.onopen = () => {
+    console.log('Conexión WebSocket establecida');
+  };
+
   ws.onmessage = (event) => {
     const devicesData = JSON.parse(event.data);
-    devices.value = devicesData;
+    console.log('Datos recibidos por WebSocket:', devicesData);
+
+    // Actualizar la lista de dispositivos
+    const transformedDevices = devicesData.devices.map(device => ({
+      id: device.id,
+      name: device.name,
+      online: device.online ? "✅ Conectado" : "❌ Desconectado",
+      state: device.state,
+      type: device.type,
+      model: device.model,
+      channels: device.channels || [] // Agregar canales si existen
+    }));
+
+    // Actualizar el estado reactivo de Vue
+    devices.value = transformedDevices;
   };
 
   ws.onerror = (error) => {
-    console.error('WebSocket error:', error);
+    console.error('Error en WebSocket:', error);
   };
 
   ws.onclose = () => {
-    console.log('WebSocket connection closed');
+    console.log('Conexión WebSocket cerrada');
   };
-  */
 });
 
-// Limpiar el intervalo cuando el componente se desmonta
+// Limpiar la conexión WebSocket cuando el componente se desmonta
 onUnmounted(() => {
-  clearInterval(intervalId);
+  if (ws) {
+    ws.close();
+  }
 });
 
 // Computed property para filtrar dispositivos
@@ -257,16 +342,6 @@ const sortByField = (field) => {
     sortField.value = field;
     sortOrder.value = "asc";
   }
-};
-
-// Función para determinar el color de la fila
-const getRowClass = (device) => {
-  if (device.state === 'on') {
-    return "table-success"; // Fila verde para dispositivos encendidos
-  } else if (device.online === '❌ Desconectado') {
-    return "table-danger"; // Fila roja para dispositivos desconectados
-  }
-  return ""; // Sin color adicional
 };
 
 // Métodos para la paginación
@@ -332,5 +407,16 @@ th {
 
 .page-link:hover {
   color: #0056b3;
+}
+
+.channel {
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.bg-success {
+  background-color: #28a745 !important;
+  color: white !important;
 }
 </style>
