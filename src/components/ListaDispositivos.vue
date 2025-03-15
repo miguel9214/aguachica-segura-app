@@ -133,19 +133,33 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onUnmounted } from "vue";
+import { ref, onMounted, computed, onUnmounted, watch } from "vue";
 import axios from "axios";
 
 const devices = ref([]);
-const previousDevices = ref([]); // Almacenar el estado anterior de los dispositivos
+const previousDevices = ref([]);
 const loading = ref(true);
 const error = ref(null);
 const searchQuery = ref("");
-const sortField = ref("name"); // Campo por el que se ordena
-const sortOrder = ref("asc"); // Orden ascendente o descendente
+const sortField = ref("name");
+const sortOrder = ref("asc");
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
-const expandedDevices = ref([]); // Almacenar los IDs de los dispositivos expandidos
+const expandedDevices = ref([]);
+const wsReconnectTimer = ref(null);
+
+// Transformar datos de los dispositivos al formato que necesitamos
+const transformDevices = (devicesData) => {
+  return devicesData.map(device => ({
+    id: device.id,
+    name: device.name,
+    online: device.online ? "✅ Conectado" : "❌ Desconectado",
+    state: device.state,
+    type: device.type,
+    model: device.model,
+    channels: device.channels || []
+  }));
+};
 
 // Función para obtener los dispositivos
 const fetchDevices = async () => {
@@ -155,16 +169,7 @@ const fetchDevices = async () => {
 
     if (response.data.error === 0 && response.data.devices) {
       // Transformar los datos al formato que espera el componente
-      const transformedDevices = response.data.devices.map(device => ({
-        id: device.id,
-        name: device.name,
-        online: device.online ? "✅ Conectado" : "❌ Desconectado",
-        state: device.state,
-        type: device.type,
-        model: device.model,
-        channels: device.channels || [] // Agregar canales si existen
-      }));
-
+      const transformedDevices = transformDevices(response.data.devices);
       console.log("Dispositivos transformados:", transformedDevices);
 
       // Comparar el estado anterior con el nuevo estado para notificaciones
@@ -172,12 +177,14 @@ const fetchDevices = async () => {
         const oldDevice = previousDevices.value.find(d => d.id === newDevice.id);
         if (oldDevice && oldDevice.state === 'off' && newDevice.state === 'on') {
           // El dispositivo ha cambiado a "on"
-          sendTelegramMessage(newDevice);
+          if (typeof sendTelegramMessage === 'function') {
+            sendTelegramMessage(newDevice);
+          }
         }
       });
 
       // Actualizar el estado anterior y actual
-      previousDevices.value = transformedDevices;
+      previousDevices.value = JSON.parse(JSON.stringify(transformedDevices));
       devices.value = transformedDevices;
     } else {
       error.value = "Error en los datos recibidos: " + (response.data.msg || "Formato inesperado");
@@ -203,7 +210,8 @@ const controlChannel = async (deviceId, channel, newState) => {
     };
     const response = await axios.post(`http://127.0.0.1:8000/control/${deviceId}`, params);
     if (response.data.error === 0) {
-      fetchDevices(); // Recargar dispositivos para actualizar el estado
+      // No es necesario recargar todos los dispositivos aquí, 
+      // el WebSocket nos notificará del cambio
     } else {
       console.error("Error al controlar el dispositivo:", response.data.msg);
     }
@@ -215,7 +223,6 @@ const controlChannel = async (deviceId, channel, newState) => {
 // Función para obtener el estado general del dispositivo
 const getDeviceState = (device) => {
   if (device.type === 162 && device.channels) {
-    // Si es un dispositivo de 3 vías, el estado general es "Encendido" si al menos un canal está encendido
     return device.channels.some(channel => channel.state === 'on') ? 'Encendido' : 'Apagado';
   }
   return device.state === 'on' ? 'Encendido' : 'Apagado';
@@ -224,11 +231,11 @@ const getDeviceState = (device) => {
 // Función para determinar el color de la fila
 const getRowClass = (device) => {
   if (getDeviceState(device) === 'Encendido') {
-    return "table-success"; // Fila verde si el dispositivo está encendido
+    return "table-success";
   } else if (device.online === '❌ Desconectado') {
-    return "table-danger"; // Fila roja si el dispositivo está desconectado
+    return "table-danger";
   }
-  return ""; // Sin color adicional
+  return "";
 };
 
 // Función para mostrar/ocultar los canales de un dispositivo
@@ -240,52 +247,78 @@ const toggleChannels = (deviceId) => {
   }
 };
 
-// Configuración de WebSocket
-let ws;
-
-onMounted(() => {
-  fetchDevices(); // Llamada inicial para cargar los dispositivos
-
-  // Conectar al servidor WebSocket
-  ws = new WebSocket('ws://127.0.0.1:8000');
+// Función para establecer conexión WebSocket
+const setupWebSocket = () => {
+  const ws = new WebSocket('ws://127.0.0.1:8000');
 
   ws.onopen = () => {
     console.log('Conexión WebSocket establecida');
+    // Limpiar el temporizador de reconexión si existe
+    if (wsReconnectTimer.value) {
+      clearTimeout(wsReconnectTimer.value);
+      wsReconnectTimer.value = null;
+    }
   };
 
   ws.onmessage = (event) => {
-    const devicesData = JSON.parse(event.data);
-    console.log('Datos recibidos por WebSocket:', devicesData);
+    try {
+      const data = JSON.parse(event.data);
+      console.log('Datos recibidos por WebSocket:', data);
 
-    // Actualizar la lista de dispositivos
-    const transformedDevices = devicesData.devices.map(device => ({
-      id: device.id,
-      name: device.name,
-      online: device.online ? "✅ Conectado" : "❌ Desconectado",
-      state: device.state,
-      type: device.type,
-      model: device.model,
-      channels: device.channels || [] // Agregar canales si existen
-    }));
-
-    // Actualizar el estado reactivo de Vue
-    devices.value = transformedDevices;
+      if (data.type === 'deviceUpdate') {
+        // Un dispositivo ha sido actualizado, refrescar datos
+        fetchDevices();
+      } else if (data.type === 'welcome') {
+        console.log('Mensaje de bienvenida WebSocket:', data.message);
+      } else if (data.devices) {
+        // Actualización completa de dispositivos
+        const transformedDevices = transformDevices(data.devices);
+        devices.value = transformedDevices;
+      }
+    } catch (err) {
+      console.error('Error al procesar mensaje WebSocket:', err);
+    }
   };
 
   ws.onerror = (error) => {
     console.error('Error en WebSocket:', error);
   };
 
-  ws.onclose = () => {
-    console.log('Conexión WebSocket cerrada');
+  ws.onclose = (event) => {
+    console.log('Conexión WebSocket cerrada. Código:', event.code);
+    // Intentar reconectar después de 5 segundos
+    wsReconnectTimer.value = setTimeout(() => {
+      console.log('Intentando reconectar WebSocket...');
+      return setupWebSocket();
+    }, 5000);
   };
-});
 
-// Limpiar la conexión WebSocket cuando el componente se desmonta
-onUnmounted(() => {
-  if (ws) {
-    ws.close();
-  }
+  return ws;
+};
+
+let ws;
+
+onMounted(() => {
+  fetchDevices(); // Carga inicial de dispositivos
+  
+  // Establecer conexión WebSocket
+  ws = setupWebSocket();
+  
+  // Configurar un intervalo para verificar actualizaciones cada 30 segundos como respaldo
+  const pollingInterval = setInterval(() => {
+    fetchDevices();
+  }, 30000);
+  
+  // Limpiar intervalo cuando el componente se desmonta
+  onUnmounted(() => {
+    clearInterval(pollingInterval);
+    if (ws) {
+      ws.close();
+    }
+    if (wsReconnectTimer.value) {
+      clearTimeout(wsReconnectTimer.value);
+    }
+  });
 });
 
 // Computed property para filtrar dispositivos
@@ -314,9 +347,11 @@ const sortedDevices = computed(() => {
         ? a.online.localeCompare(b.online)
         : b.online.localeCompare(a.online);
     } else if (sortField.value === "state") {
+      const stateA = getDeviceState(a) === 'Encendido' ? 1 : 0;
+      const stateB = getDeviceState(b) === 'Encendido' ? 1 : 0;
       return sortOrder.value === "asc"
-        ? (a.state === 'on' ? 1 : 0) - (b.state === 'on' ? 1 : 0)
-        : (b.state === 'on' ? 1 : 0) - (a.state === 'on' ? 1 : 0);
+        ? stateA - stateB
+        : stateB - stateA;
     }
     return 0;
   });
@@ -360,6 +395,41 @@ const nextPage = () => {
 const goToPage = (page) => {
   currentPage.value = page;
 };
+
+// Vigilar cambios en la búsqueda o el ordenamiento para reiniciar la paginación
+watch([searchQuery, sortField, sortOrder], () => {
+  currentPage.value = 1;
+});
+
+// Función para actualizar un dispositivo específico en la lista
+const updateDeviceInList = (deviceId, newParams) => {
+  const deviceIndex = devices.value.findIndex(d => d.id === deviceId);
+  
+  if (deviceIndex !== -1) {
+    const device = {...devices.value[deviceIndex]};
+    
+    // Actualizar estado principal si aplica
+    if (newParams.switch) {
+      device.state = newParams.switch;
+    }
+    
+    // Actualizar canales si aplica
+    if (newParams.switches && device.channels) {
+      newParams.switches.forEach(sw => {
+        const channelIndex = device.channels.findIndex(ch => ch.channel - 1 === sw.outlet);
+        if (channelIndex !== -1) {
+          device.channels[channelIndex].state = sw.switch;
+        }
+      });
+    }
+    
+    // Crear una nueva matriz de dispositivos con el dispositivo actualizado
+    const updatedDevices = [...devices.value];
+    updatedDevices[deviceIndex] = device;
+    devices.value = updatedDevices;
+  }
+};
+
 </script>
 
 <style scoped>
