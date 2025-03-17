@@ -50,7 +50,12 @@
                 {{ sortOrder === 'asc' ? '▲' : '▼' }}
               </span>
             </th>
-            <th scope="col">MODELO</th>
+            <th scope="col" @click="sortByField('model')">
+              MODELO
+              <span v-if="sortField === 'model'">
+                {{ sortOrder === 'asc' ? '▲' : '▼' }}
+              </span>
+            </th>
             <th scope="col">ACCIONES</th>
           </tr>
         </thead>
@@ -150,7 +155,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onUnmounted, watch } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import axios from "axios";
 
 const devices = ref([]);
@@ -163,7 +168,6 @@ const sortOrder = ref("asc");
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
 const expandedDevices = ref([]);
-const wsReconnectTimer = ref(null);
 
 // Transformar datos de los dispositivos al formato que necesitamos
 const transformDevices = (devicesData) => {
@@ -301,6 +305,10 @@ const sortedDevices = computed(() => {
       return sortOrder.value === "asc"
         ? stateA - stateB
         : stateB - stateA;
+    } else if (sortField.value === "model") {
+      return sortOrder.value === "asc"
+        ? a.model.localeCompare(b.model)
+        : b.model.localeCompare(a.model);
     }
     return 0;
   });
