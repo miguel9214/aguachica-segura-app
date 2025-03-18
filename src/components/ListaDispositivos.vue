@@ -64,35 +64,35 @@
             <!-- Fila principal del dispositivo -->
             <tr
               :class="getRowClass(device)"
-              @click="toggleChannels(device.id)"
-              style="cursor: pointer;"
             >
-              <td>{{ device.name }}</td>
-              <td>{{ device.id }}</td>
-              <td>
+              <td @click="toggleChannels(device.id)" style="cursor: pointer;">{{ device.name }}</td>
+              <td @click="toggleChannels(device.id)" style="cursor: pointer;">{{ device.id }}</td>
+              <td @click="toggleChannels(device.id)" style="cursor: pointer;">
                 <span :class="device.online === '✅ Conectado' ? 'text-success' : 'text-danger'">
                   {{ device.online }}
                 </span>
               </td>
-              <td>
+              <td @click="toggleChannels(device.id)" style="cursor: pointer;">
                 {{ getDeviceState(device) }}
               </td>
-              <td>{{ device.model }}</td>
+              <td @click="toggleChannels(device.id)" style="cursor: pointer;">{{ device.model }}</td>
               <td>
-                <button
-                  class="btn btn-sm btn-success"
-                  @click.stop="toggleDeviceState(device.id, 'on')"
-                  :disabled="!device.online || getDeviceState(device) === 'Encendido'"
-                >
-                  Encender
-                </button>
-                <button
-                  class="btn btn-sm btn-danger"
-                  @click.stop="toggleDeviceState(device.id, 'off')"
-                  :disabled="!device.online || getDeviceState(device) === 'Apagado'"
-                >
-                  Apagar
-                </button>
+                <div class="d-flex gap-2">
+                  <button
+                    class="btn btn-sm btn-success"
+                    @click="controlDevice(device.id, 'on')"
+                    :disabled="device.online === '❌ Desconectado' || getDeviceState(device) === 'Encendido'"
+                  >
+                    Encender
+                  </button>
+                  <button
+                    class="btn btn-sm btn-danger"
+                    @click="controlDevice(device.id, 'off')"
+                    :disabled="device.online === '❌ Desconectado' || getDeviceState(device) === 'Apagado'"
+                  >
+                    Apagar
+                  </button>
+                </div>
               </td>
             </tr>
 
@@ -115,14 +115,14 @@
                         <button
                           class="btn btn-sm btn-success"
                           @click.stop="controlChannel(device.id, channel.channel, 'on')"
-                          :disabled="!device.online || channel.state === 'on'"
+                          :disabled="device.online === '❌ Desconectado'"
                         >
                           Encender
                         </button>
                         <button
                           class="btn btn-sm btn-danger"
                           @click.stop="controlChannel(device.id, channel.channel, 'off')"
-                          :disabled="!device.online || channel.state === 'off'"
+                          :disabled="device.online === '❌ Desconectado'"
                         >
                           Apagar
                         </button>
@@ -155,7 +155,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed, onUnmounted, watch } from "vue";
 import axios from "axios";
 
 const devices = ref([]);
@@ -168,6 +168,7 @@ const sortOrder = ref("asc");
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
 const expandedDevices = ref([]);
+const wsReconnectTimer = ref(null);
 
 // Transformar datos de los dispositivos al formato que necesitamos
 const transformDevices = (devicesData) => {
@@ -186,8 +187,25 @@ const transformDevices = (devicesData) => {
 const fetchDevices = async () => {
   try {
     const response = await axios.get("http://127.0.0.1:8000/devices");
+    console.log("Respuesta original:", response.data);
+
     if (response.data.error === 0 && response.data.devices) {
+      // Transformar los datos al formato que espera el componente
       const transformedDevices = transformDevices(response.data.devices);
+      console.log("Dispositivos transformados:", transformedDevices);
+
+      // Comparar el estado anterior con el nuevo estado para notificaciones
+      transformedDevices.forEach((newDevice) => {
+        const oldDevice = previousDevices.value.find(d => d.id === newDevice.id);
+        if (oldDevice && oldDevice.state === 'off' && newDevice.state === 'on') {
+          // El dispositivo ha cambiado a "on"
+          if (typeof sendTelegramMessage === 'function') {
+            sendTelegramMessage(newDevice);
+          }
+        }
+      });
+
+      // Actualizar el estado anterior y actual
       previousDevices.value = JSON.parse(JSON.stringify(transformedDevices));
       devices.value = transformedDevices;
     } else {
@@ -195,6 +213,7 @@ const fetchDevices = async () => {
     }
   } catch (err) {
     if (err.response && err.response.status === 401) {
+      // Redirigir a la página de inicio de sesión
       window.location.href = "/login";
     } else {
       error.value = "Error al cargar dispositivos";
@@ -202,25 +221,6 @@ const fetchDevices = async () => {
     }
   } finally {
     loading.value = false;
-  }
-};
-
-// Función para cambiar el estado de un dispositivo
-const toggleDeviceState = async (deviceId, newState) => {
-  try {
-    const response = await axios.post(`http://127.0.0.1:8000/control/${deviceId}`, {
-      switch: newState
-    });
-    if (response.data.error === 0) {
-      const deviceIndex = devices.value.findIndex(d => d.id === deviceId);
-      if (deviceIndex !== -1) {
-        devices.value[deviceIndex].state = newState;
-      }
-    } else {
-      console.error("Error al controlar el dispositivo:", response.data.msg);
-    }
-  } catch (error) {
-    console.error("Error de conexión con el servidor:", error);
   }
 };
 
@@ -232,13 +232,29 @@ const controlChannel = async (deviceId, channel, newState) => {
     };
     const response = await axios.post(`http://127.0.0.1:8000/control/${deviceId}`, params);
     if (response.data.error === 0) {
-      const deviceIndex = devices.value.findIndex(d => d.id === deviceId);
-      if (deviceIndex !== -1 && devices.value[deviceIndex].channels) {
-        const channelIndex = devices.value[deviceIndex].channels.findIndex(ch => ch.channel === channel);
-        if (channelIndex !== -1) {
-          devices.value[deviceIndex].channels[channelIndex].state = newState;
-        }
-      }
+      // No es necesario recargar todos los dispositivos aquí, 
+      // el WebSocket nos notificará del cambio
+    } else {
+      console.error("Error al controlar el dispositivo:", response.data.msg);
+    }
+  } catch (error) {
+    console.error("Error de conexión con el servidor:", error);
+  }
+};
+
+// Nueva función para controlar directamente el dispositivo (encender/apagar)
+const controlDevice = async (deviceId, newState) => {
+  try {
+    // Para dispositivos normales, usamos el mismo endpoint pero sin especificar un canal
+    const params = {
+      switch: newState
+    };
+    
+    const response = await axios.post(`http://127.0.0.1:8000/control/${deviceId}`, params);
+    if (response.data.error === 0) {
+      // El WebSocket nos notificará del cambio, pero también actualizamos localmente
+      // para una respuesta más inmediata en la UI
+      updateDeviceInList(deviceId, { switch: newState });
     } else {
       console.error("Error al controlar el dispositivo:", response.data.msg);
     }
@@ -273,6 +289,80 @@ const toggleChannels = (deviceId) => {
     expandedDevices.value.push(deviceId);
   }
 };
+
+// Función para establecer conexión WebSocket
+const setupWebSocket = () => {
+  const ws = new WebSocket('ws://127.0.0.1:8000');
+
+  ws.onopen = () => {
+    console.log('Conexión WebSocket establecida');
+    // Limpiar el temporizador de reconexión si existe
+    if (wsReconnectTimer.value) {
+      clearTimeout(wsReconnectTimer.value);
+      wsReconnectTimer.value = null;
+    }
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      console.log('Datos recibidos por WebSocket:', data);
+
+      if (data.type === 'deviceUpdate') {
+        // Un dispositivo ha sido actualizado, refrescar datos
+        fetchDevices();
+      } else if (data.type === 'welcome') {
+        console.log('Mensaje de bienvenida WebSocket:', data.message);
+      } else if (data.devices) {
+        // Actualización completa de dispositivos
+        const transformedDevices = transformDevices(data.devices);
+        devices.value = transformedDevices;
+      }
+    } catch (err) {
+      console.error('Error al procesar mensaje WebSocket:', err);
+    }
+  };
+
+  ws.onerror = (error) => {
+    console.error('Error en WebSocket:', error);
+  };
+
+  ws.onclose = (event) => {
+    console.log('Conexión WebSocket cerrada. Código:', event.code);
+    // Intentar reconectar después de 5 segundos
+    wsReconnectTimer.value = setTimeout(() => {
+      console.log('Intentando reconectar WebSocket...');
+      return setupWebSocket();
+    }, 5000);
+  };
+
+  return ws;
+};
+
+let ws;
+
+onMounted(() => {
+  fetchDevices(); // Carga inicial de dispositivos
+  
+  // Establecer conexión WebSocket
+  ws = setupWebSocket();
+  
+  // Configurar un intervalo para verificar actualizaciones cada 30 segundos como respaldo
+  const pollingInterval = setInterval(() => {
+    fetchDevices();
+  }, 30000);
+  
+  // Limpiar intervalo cuando el componente se desmonta
+  onUnmounted(() => {
+    clearInterval(pollingInterval);
+    if (ws) {
+      ws.close();
+    }
+    if (wsReconnectTimer.value) {
+      clearTimeout(wsReconnectTimer.value);
+    }
+  });
+});
 
 // Computed property para filtrar dispositivos
 const filteredDevices = computed(() => {
@@ -358,9 +448,35 @@ watch([searchQuery, sortField, sortOrder], () => {
   currentPage.value = 1;
 });
 
-onMounted(() => {
-  fetchDevices();
-});
+// Función para actualizar un dispositivo específico en la lista
+const updateDeviceInList = (deviceId, newParams) => {
+  const deviceIndex = devices.value.findIndex(d => d.id === deviceId);
+  
+  if (deviceIndex !== -1) {
+    const device = {...devices.value[deviceIndex]};
+    
+    // Actualizar estado principal si aplica
+    if (newParams.switch) {
+      device.state = newParams.switch;
+    }
+    
+    // Actualizar canales si aplica
+    if (newParams.switches && device.channels) {
+      newParams.switches.forEach(sw => {
+        const channelIndex = device.channels.findIndex(ch => ch.channel - 1 === sw.outlet);
+        if (channelIndex !== -1) {
+          device.channels[channelIndex].state = sw.switch;
+        }
+      });
+    }
+    
+    // Crear una nueva matriz de dispositivos con el dispositivo actualizado
+    const updatedDevices = [...devices.value];
+    updatedDevices[deviceIndex] = device;
+    devices.value = updatedDevices;
+  }
+};
+
 </script>
 
 <style scoped>
@@ -419,9 +535,5 @@ th {
 .bg-success {
   background-color: #28a745 !important;
   color: white !important;
-}
-
-.btn-sm {
-  margin: 2px;
 }
 </style>
