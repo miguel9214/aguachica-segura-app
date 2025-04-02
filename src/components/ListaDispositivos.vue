@@ -186,7 +186,7 @@ const transformDevices = (devicesData) => {
 // Función para obtener los dispositivos
 const fetchDevices = async () => {
   try {
-    const response = await axios.get("http://127.0.0.1:8000/devices");
+    const response = await axios.get("https://conexion-ewelink-api.up.railway.app/devices");
     console.log("Respuesta original:", response.data);
 
     if (response.data.error === 0 && response.data.devices) {
@@ -230,7 +230,7 @@ const controlChannel = async (deviceId, channel, newState) => {
     const params = {
       switches: [{ switch: newState, outlet: channel - 1 }]
     };
-    const response = await axios.post(`http://127.0.0.1:8000/control/${deviceId}`, params);
+    const response = await axios.post(`https://conexion-ewelink-api.up.railway.app/control/${deviceId}`, params);
     if (response.data.error === 0) {
       // No es necesario recargar todos los dispositivos aquí, 
       // el WebSocket nos notificará del cambio
@@ -250,7 +250,7 @@ const controlDevice = async (deviceId, newState) => {
       switch: newState
     };
     
-    const response = await axios.post(`http://127.0.0.1:8000/control/${deviceId}`, params);
+    const response = await axios.post(`https://conexion-ewelink-api.up.railway.app/control/${deviceId}`, params);
     if (response.data.error === 0) {
       // El WebSocket nos notificará del cambio, pero también actualizamos localmente
       // para una respuesta más inmediata en la UI
@@ -292,7 +292,7 @@ const toggleChannels = (deviceId) => {
 
 // Función para establecer conexión WebSocket
 const setupWebSocket = () => {
-  const ws = new WebSocket('ws://127.0.0.1:8000');
+  const ws = new WebSocket('ws://conexion-ewelink-api.up.railway.app');
 
   ws.onopen = () => {
     console.log('Conexión WebSocket establecida');
