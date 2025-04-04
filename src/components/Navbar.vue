@@ -44,6 +44,11 @@
               <i class="bi bi-people me-1"></i> Usuarios
             </router-link>
           </li>
+          <li class="nav-item">
+            <router-link to="/loginewelink" class="nav-link" active-class="active">
+              <i class="bi bi-people me-1"></i> Iniciar sesion Ewelink
+            </router-link>
+          </li>
         </ul>
 
         <!-- Menú derecho -->

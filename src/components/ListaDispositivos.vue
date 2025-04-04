@@ -292,7 +292,7 @@ const toggleChannels = (deviceId) => {
 
 // Función para establecer conexión WebSocket
 const setupWebSocket = () => {
-  const ws = new WebSocket('ws://conexion-ewelink-api.up.railway.app');
+  const ws = new WebSocket('wss://conexion-ewelink-api.up.railway.app');
 
   ws.onopen = () => {
     console.log('Conexión WebSocket establecida');
