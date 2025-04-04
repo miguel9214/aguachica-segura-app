@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import LoginView from "../views/Login.vue";
+import LoginEwelink from "../views/Login.vue";
 import LoginUser from "../views/LoginUser.vue";
 import Eventos from "../components/Eventos.vue";
 import UserManagement from "../components/UserManagement.vue";
@@ -18,13 +18,14 @@ const routes = [
     }
   },
   { 
-    path: "/login", 
-    component: LoginView,
+    path: "/loginewelink", 
+    component: LoginEwelink,
     meta: {
       forGuests: true,
       hideLayout: true
     } 
   },
+
   { 
     path: "/eventos", 
     name: "eventos",
