@@ -10,7 +10,7 @@ import DashboardView from "../views/DashboardView.vue"; // Nueva vista protegida
 
 const routes = [
   { 
-    path: "/",  
+    path: "/login",  
     component: LoginUser, 
     meta: { 
       forGuests: true,
