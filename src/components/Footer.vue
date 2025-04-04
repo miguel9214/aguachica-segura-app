@@ -5,7 +5,7 @@
           <div class="col-md-4 mb-4 mb-md-0">
             <h5 class="d-flex align-items-center">
               <!-- <img src="@/assets/logo.png" alt="Logo" class="footer-logo me-2"> -->
-              Monitoreo RP
+              Mantenimiento y Seguridad RP
             </h5>
             <p class="mt-2 small">Sistema profesional de monitoreo y seguridad</p>
           </div>
@@ -29,13 +29,13 @@
             <h5>Contacto</h5>
             <ul class="nav flex-column">
               <li class="nav-item">
-                <a href="mailto:soporte@monitoreorp.com" class="nav-link">
-                  <i class="bi bi-envelope me-2"></i> soporte@monitoreorp.com
+                <a href="mailto:mantenimientoyseguridadrp@gmail.com" class="nav-link">
+                  <i class="bi bi-envelope me-2"></i> mantenimientoyseguridadrp@gmail.com
                 </a>
               </li>
               <li class="nav-item">
-                <a href="tel:+123456789" class="nav-link">
-                  <i class="bi bi-telephone me-2"></i> +1 234 567 89
+                <a href="tel:+573175755104" class="nav-link">
+                  <i class="bi bi-telephone me-2"></i> +57 317 575 5104
                 </a>
               </li>
             </ul>
@@ -61,7 +61,7 @@
         
         <div class="row">
           <div class="col-md-6 text-center text-md-start">
-            <p class="small mb-0">© {{ currentYear }} Monitoreo RP. Todos los derechos reservados.</p>
+            <p class="small mb-0">© {{ currentYear }} Mantenimiento y seguridad RP. Todos los derechos reservados.</p>
           </div>
           <div class="col-md-6 text-center text-md-end">
             <p class="small mb-0">

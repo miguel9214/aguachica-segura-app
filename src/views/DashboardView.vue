@@ -2,8 +2,14 @@
   <div class="dashboard-container">
     <!-- Encabezado del Dashboard -->
     <div class="dashboard-header">
-      <h2><i class="bi bi-clipboard2-pulse me-2"></i>Panel de Control de Emergencias</h2>
-      <p class="welcome-message">Bienvenido, <strong>{{ currentUser }}</strong> <i class="bi bi-person-circle ms-1"></i></p>
+      <h2>
+        <i class="bi bi-clipboard2-pulse me-2"></i>Panel de Control de
+        Emergencias
+      </h2>
+      <p class="welcome-message">
+        Bienvenido, <strong>{{ currentUser }}</strong>
+        <i class="bi bi-person-circle ms-1"></i>
+      </p>
     </div>
 
     <!-- Tarjetas resumen (KPI) -->
@@ -19,7 +25,9 @@
               <div>
                 <h5 class="card-title mb-1">Dispositivos Activos</h5>
                 <p class="card-value mb-0">{{ stats.activeDevices }}</p>
-                <p class="card-change positive"><i class="bi bi-graph-up-arrow"></i> +5% vs ayer</p>
+                <p class="card-change positive">
+                  <i class="bi bi-graph-up-arrow"></i> +5% vs ayer
+                </p>
               </div>
             </div>
           </div>
@@ -35,46 +43,50 @@
               <div>
                 <h5 class="card-title mb-1">Dispositivos Inactivos</h5>
                 <p class="card-value mb-0">{{ stats.inactiveDevices }}</p>
-                <p class="card-change negative"><i class="bi bi-graph-down-arrow"></i> -2% vs ayer</p>
+                <p class="card-change negative">
+                  <i class="bi bi-graph-down-arrow"></i> -2% vs ayer
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
-      
+
       <!-- Tarjetas de emergencias -->
       <div class="col-md-3">
         <div class="card summary-card police-card">
           <div class="card-body">
             <div class="d-flex align-items-center">
-              <div class="icon-container bg-danger bg-opacity-10 me-3">
-                <i class="bi bi-shield-fill-check text-danger fs-3"></i>
+              <div class="icon-container bg-police-subtle me-3">
+                <i class="bi bi-shield-fill text-police fs-3"></i>
               </div>
               <div>
                 <h5 class="card-title mb-1">Incidentes Policiales</h5>
                 <p class="card-value mb-0">{{ stats.policeIncidents }}</p>
-                <p class="card-change positive"><i class="bi bi-graph-up-arrow"></i> +8% vs ayer</p>
+                <p class="card-change positive">
+                  <i class="bi bi-graph-up-arrow"></i> +8% vs ayer
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
       <div class="col-md-3">
-        <div class="card summary-card ambulance-card">
-          <div class="card-body">
-            <div class="d-flex align-items-center">
-              <div class="icon-container bg-success bg-opacity-10 me-3">
-                <i class="bi bi-ambulance text-success fs-3"></i>
-              </div>
-              <div>
-                <h5 class="card-title mb-1">Llamadas Ambulancia</h5>
-                <p class="card-value mb-0">{{ stats.ambulanceCalls }}</p>
-                <p class="card-change negative"><i class="bi bi-graph-down-arrow"></i> -3% vs ayer</p>
-              </div>
-            </div>
-          </div>
+  <div class="card summary-card ambulance-card">
+    <div class="card-body">
+      <div class="d-flex align-items-center">
+        <div class="icon-container bg-primary bg-opacity-10 me-3">
+          <i class="bi bi-hospital text-primary fs-3"></i>
+        </div>
+        <div>
+          <h5 class="card-title mb-1">Llamadas Ambulancia</h5>
+          <p class="card-value mb-0">{{ stats.ambulanceCalls }}</p>
+          <p class="card-change negative"><i class="bi bi-graph-down-arrow"></i> -3% vs ayer</p>
         </div>
       </div>
+    </div>
+  </div>
+</div>
     </div>
 
     <!-- Segunda fila de tarjetas -->
@@ -83,13 +95,15 @@
         <div class="card summary-card firefighter-card">
           <div class="card-body">
             <div class="d-flex align-items-center">
-              <div class="icon-container bg-warning bg-opacity-10 me-3">
-                <i class="bi bi-fire text-warning fs-3"></i>
+              <div class="icon-container bg-firefighter-subtle me-3">
+                <i class="bi bi-fire text-firefighter fs-3"></i>
               </div>
               <div>
                 <h5 class="card-title mb-1">Salidas Bomberos</h5>
                 <p class="card-value mb-0">{{ stats.firefighterOutcomes }}</p>
-                <p class="card-change positive"><i class="bi bi-graph-up-arrow"></i> +12% vs ayer</p>
+                <p class="card-change positive">
+                  <i class="bi bi-graph-up-arrow"></i> +12% vs ayer
+                </p>
               </div>
             </div>
           </div>
@@ -105,7 +119,9 @@
               <div>
                 <h5 class="card-title mb-1">Tiempo Respuesta</h5>
                 <p class="card-value mb-0">{{ stats.responseTime }} min</p>
-                <p class="card-change positive"><i class="bi bi-graph-down-arrow"></i> -1.5 min vs ayer</p>
+                <p class="card-change positive">
+                  <i class="bi bi-graph-down-arrow"></i> -1.5 min vs ayer
+                </p>
               </div>
             </div>
           </div>
@@ -121,7 +137,9 @@
               <div>
                 <h5 class="card-title mb-1">Situaciones Controladas</h5>
                 <p class="card-value mb-0">{{ stats.controlledSituations }}</p>
-                <p class="card-change positive"><i class="bi bi-graph-up-arrow"></i> +7% vs ayer</p>
+                <p class="card-change positive">
+                  <i class="bi bi-graph-up-arrow"></i> +7% vs ayer
+                </p>
               </div>
             </div>
           </div>
@@ -134,7 +152,10 @@
       <div class="col-md-8">
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title"><i class="bi bi-activity me-2"></i>Actividad Reciente de Emergencias</h5>
+            <h5 class="card-title">
+              <i class="bi bi-activity me-2"></i>Actividad Reciente de
+              Emergencias
+            </h5>
             <div class="chart-container">
               <canvas ref="activityChart"></canvas>
             </div>
@@ -144,7 +165,10 @@
       <div class="col-md-4">
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title"><i class="bi bi-pie-chart-fill me-2"></i>Distribución de Emergencias</h5>
+            <h5 class="card-title">
+              <i class="bi bi-pie-chart-fill me-2"></i>Distribución de
+              Emergencias
+            </h5>
             <div class="chart-container">
               <canvas ref="pieChart"></canvas>
             </div>
@@ -157,7 +181,9 @@
     <div class="card">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="card-title mb-0"><i class="bi bi-list-ul me-2"></i>Últimas Emergencias</h5>
+          <h5 class="card-title mb-0">
+            <i class="bi bi-list-ul me-2"></i>Últimas Emergencias
+          </h5>
           <router-link to="/eventos" class="btn btn-sm btn-outline-primary">
             <i class="bi bi-eye-fill me-1"></i> Ver todos
           </router-link>
@@ -178,13 +204,26 @@
               <tr v-for="event in recentEvents" :key="event.id">
                 <td>#{{ event.id }}</td>
                 <td>
-                  <span :class="`badge bg-${event.deviceStatus === 'Activo' ? 'success' : 'secondary'}`">
-                    <i :class="`bi ${event.deviceStatus === 'Activo' ? 'bi-wifi' : 'bi-wifi-off'} me-1`"></i>
+                  <span
+                    :class="`badge bg-${
+                      event.deviceStatus === 'Activo' ? 'success' : 'secondary'
+                    }`"
+                  >
+                    <i
+                      :class="`bi ${
+                        event.deviceStatus === 'Activo'
+                          ? 'bi-wifi'
+                          : 'bi-wifi-off'
+                      } me-1`"
+                    ></i>
                     {{ event.device }}
                   </span>
                 </td>
                 <td>
-                  <span class="badge d-flex align-items-center" :class="`bg-${getEventTypeClass(event.type)}`">
+                  <span
+                    class="badge d-flex align-items-center"
+                    :class="`bg-${getEventTypeClass(event.type)}`"
+                  >
                     <i :class="`bi ${getEventIcon(event.type)} me-1`"></i>
                     {{ event.type }}
                   </span>
@@ -198,7 +237,10 @@
                   {{ formatDateTime(event.timestamp) }}
                 </td>
                 <td>
-                  <span class="badge" :class="`bg-${getStatusClass(event.status)}`">
+                  <span
+                    class="badge"
+                    :class="`bg-${getStatusClass(event.status)}`"
+                  >
                     <i :class="`bi ${getStatusIcon(event.status)} me-1`"></i>
                     {{ event.status }}
                   </span>
@@ -212,13 +254,25 @@
 
     <!-- Acceso rápido -->
     <div class="quick-actions mt-4">
-      <h5 class="mb-3"><i class="bi bi-lightning-charge-fill me-2"></i>Acciones Rápidas</h5>
+      <h5 class="mb-3">
+        <i class="bi bi-lightning-charge-fill me-2"></i>Acciones Rápidas
+      </h5>
       <div class="row">
-        <div class="col-md-2 col-6 mb-3" v-for="action in quickActions" :key="action.title">
-          <router-link :to="action.path" class="quick-action-card text-decoration-none">
+        <div
+          class="col-md-2 col-6 mb-3"
+          v-for="action in quickActions"
+          :key="action.title"
+        >
+          <router-link
+            :to="action.path"
+            class="quick-action-card text-decoration-none"
+          >
             <div class="card h-100">
               <div class="card-body text-center">
-                <div class="icon-container mb-3" :class="`bg-${action.color}-subtle`">
+                <div
+                  class="icon-container mb-3"
+                  :class="`bg-${action.color}-subtle`"
+                >
                   <i :class="`bi ${action.icon} fs-4 text-${action.color}`"></i>
                 </div>
                 <p class="mb-0 small fw-bold">{{ action.title }}</p>
@@ -232,19 +286,28 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { useRouter } from 'vue-router';
-import { Chart, registerables } from 'chart.js';
+import { ref, onMounted, onBeforeUnmount } from "vue";
+import { useRouter } from "vue-router";
+import { Chart, registerables } from "chart.js";
 
 // Registra todos los componentes de Chart.js
 Chart.register(...registerables);
 
 const router = useRouter();
-const currentUser = ref(localStorage.getItem('authUser') || 'Operador de Emergencias');
+const currentUser = ref(
+  localStorage.getItem("authUser") || "Operador de Emergencias"
+);
 const activityChart = ref(null);
 const pieChart = ref(null);
 let activityChartInstance = null;
 let pieChartInstance = null;
+
+// Colores personalizados
+const colors = {
+  police: "rgb(107, 142, 35)", // Verde oliva
+  ambulance: "rgb(13, 110, 253)", // Azul
+  firefighter: "rgb(220, 53, 69)", // Rojo
+};
 
 // Datos de ejemplo para el dashboard
 const stats = ref({
@@ -254,64 +317,84 @@ const stats = ref({
   ambulanceCalls: 22,
   firefighterOutcomes: 8,
   responseTime: 5.2,
-  controlledSituations: 38
+  controlledSituations: 38,
 });
 
 const recentEvents = ref([
-  { 
-    id: 1024, 
-    device: 'CAM-025',
-    deviceStatus: 'Activo',
-    type: 'POLICÍA', 
-    location: 'Av. Principal 123', 
-    timestamp: new Date(), 
-    status: 'En curso' 
+  {
+    id: 1024,
+    device: "CAM-025",
+    deviceStatus: "Activo",
+    type: "POLICÍA",
+    location: "Av. Principal 123",
+    timestamp: new Date(),
+    status: "En curso",
   },
-  { 
-    id: 1023, 
-    device: 'SEN-412',
-    deviceStatus: 'Inactivo',
-    type: 'AMBULANCIA', 
-    location: 'Calle Secundaria 456', 
-    timestamp: new Date(Date.now() - 3600000), 
-    status: 'Atendido' 
+  {
+    id: 1023,
+    device: "SEN-412",
+    deviceStatus: "Inactivo",
+    type: "AMBULANCIA",
+    location: "Calle Secundaria 456",
+    timestamp: new Date(Date.now() - 3600000),
+    status: "Atendido",
   },
-  { 
-    id: 1022, 
-    device: 'CAM-012',
-    deviceStatus: 'Activo',
-    type: 'BOMBEROS', 
-    location: 'Barrio Industrial', 
-    timestamp: new Date(Date.now() - 7200000), 
-    status: 'En proceso' 
+  {
+    id: 1022,
+    device: "CAM-012",
+    deviceStatus: "Activo",
+    type: "BOMBEROS",
+    location: "Barrio Industrial",
+    timestamp: new Date(Date.now() - 7200000),
+    status: "En proceso",
   },
-  { 
-    id: 1021, 
-    device: 'SEN-205',
-    deviceStatus: 'Activo',
-    type: 'POLICÍA', 
-    location: 'Parque Central', 
-    timestamp: new Date(Date.now() - 10800000), 
-    status: 'Resuelto' 
+  {
+    id: 1021,
+    device: "SEN-205",
+    deviceStatus: "Activo",
+    type: "POLICÍA",
+    location: "Parque Central",
+    timestamp: new Date(Date.now() - 10800000),
+    status: "Resuelto",
   },
-  { 
-    id: 1020, 
-    device: 'CAM-018',
-    deviceStatus: 'Inactivo',
-    type: 'AMBULANCIA', 
-    location: 'Residencial Las Flores', 
-    timestamp: new Date(Date.now() - 14400000), 
-    status: 'Atendido' 
+  {
+    id: 1020,
+    device: "CAM-018",
+    deviceStatus: "Inactivo",
+    type: "AMBULANCIA",
+    location: "Residencial Las Flores",
+    timestamp: new Date(Date.now() - 14400000),
+    status: "Atendido",
   },
 ]);
 
 const quickActions = ref([
-  { title: 'Dispositivos', icon: 'bi-device-hdd-fill', path: '/dispositivos', color: 'primary' },
-  { title: 'Nuevo Reporte', icon: 'bi-plus-circle-fill', path: '/reportes', color: 'success' },
-  { title: 'Despacho', icon: 'bi-send-fill', path: '/despacho', color: 'info' },
-  { title: 'Ver Mapa', icon: 'bi-map-fill', path: '/mapa', color: 'warning' },
-  { title: 'Configuración', icon: 'bi-gear-fill', path: '/settings', color: 'secondary' },
-  { title: 'Reportes', icon: 'bi-file-earmark-bar-graph-fill', path: '/reports', color: 'danger' },
+  {
+    title: "Dispositivos",
+    icon: "bi-device-hdd-fill",
+    path: "/dispositivos",
+    color: "primary",
+  },
+  {
+    title: "Nuevo Reporte",
+    icon: "bi-plus-circle-fill",
+    path: "/reportes",
+    color: "success",
+  },
+  { title: "Despacho", icon: "bi-send-fill", path: "/despacho", color: "info" },
+  { title: "Ver Mapa", icon: "bi-map-fill", path: "/mapa", color: "warning" },
+  {
+    title: "Configuración",
+    icon: "bi-gear-fill",
+    path: "/settings",
+    color: "secondary",
+  },
+  {
+    title: "Reportes",
+    icon: "bi-file-earmark-bar-graph-fill",
+    path: "/reports",
+    color: "danger",
+  },
 ]);
 
 // Inicializar gráficos
@@ -323,126 +406,128 @@ const initCharts = () => {
   // Gráfico de actividad (líneas) - SOLO EMERGENCIAS
   if (activityChart.value) {
     activityChartInstance = new Chart(activityChart.value, {
-      type: 'line',
+      type: "line",
       data: {
-        labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+        labels: ["00:00", "04:00", "08:00", "12:00", "16:00", "20:00"],
         datasets: [
           {
-            label: 'POLICÍA',
+            label: "POLICÍA",
             data: [2, 1, 4, 5, 3, 2],
-            backgroundColor: 'rgba(220, 53, 69, 0.2)',
-            borderColor: 'rgba(220, 53, 69, 1)',
+            backgroundColor: `${colors.police.replace(")", ", 0.2)")}`,
+            borderColor: colors.police,
             borderWidth: 2,
             tension: 0.3,
-            fill: true
+            fill: true,
           },
           {
-            label: 'AMBULANCIA',
+            label: "AMBULANCIA",
             data: [3, 2, 5, 7, 4, 3],
-            backgroundColor: 'rgba(25, 135, 84, 0.2)',
-            borderColor: 'rgba(25, 135, 84, 1)',
+            backgroundColor: `${colors.ambulance.replace(")", ", 0.2)")}`,
+            borderColor: colors.ambulance,
             borderWidth: 2,
             tension: 0.3,
-            fill: true
+            fill: true,
           },
           {
-            label: 'BOMBEROS',
+            label: "BOMBEROS",
             data: [0, 1, 2, 1, 3, 1],
-            backgroundColor: 'rgba(255, 193, 7, 0.2)',
-            borderColor: 'rgba(255, 193, 7, 1)',
+            backgroundColor: `${colors.firefighter.replace(")", ", 0.2)")}`,
+            borderColor: colors.firefighter,
             borderWidth: 2,
             tension: 0.3,
-            fill: true
-          }
-        ]
+            fill: true,
+          },
+        ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'top',
+            position: "top",
             labels: {
-              color: '#333',
+              color: "#333",
               font: {
-                weight: 'bold'
+                weight: "bold",
               },
               usePointStyle: true,
-              pointStyle: 'circle'
-            }
+              pointStyle: "circle",
+            },
           },
           tooltip: {
-            mode: 'index',
+            mode: "index",
             intersect: false,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            titleColor: '#fff',
-            bodyColor: '#fff'
-          }
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            titleColor: "#fff",
+            bodyColor: "#fff",
+          },
         },
         scales: {
           y: {
             beginAtZero: true,
             grid: {
-              color: 'rgba(0, 0, 0, 0.05)'
+              color: "rgba(0, 0, 0, 0.05)",
             },
             ticks: {
-              color: '#666'
-            }
+              color: "#666",
+            },
           },
           x: {
             grid: {
-              color: 'rgba(0, 0, 0, 0.05)'
+              color: "rgba(0, 0, 0, 0.05)",
             },
             ticks: {
-              color: '#666'
-            }
-          }
-        }
-      }
+              color: "#666",
+            },
+          },
+        },
+      },
     });
   }
 
   // Gráfico circular (pie) - SOLO EMERGENCIAS
   if (pieChart.value) {
     pieChartInstance = new Chart(pieChart.value, {
-      type: 'pie',
+      type: "pie",
       data: {
-        labels: ['POLICÍA', 'AMBULANCIA', 'BOMBEROS'],
-        datasets: [{
-          data: [15, 22, 8],
-          backgroundColor: [
-            'rgba(220, 53, 69, 0.7)',
-            'rgba(25, 135, 84, 0.7)',
-            'rgba(255, 193, 7, 0.7)'
-          ],
-          borderWidth: 1
-        }]
+        labels: ["POLICÍA", "AMBULANCIA", "BOMBEROS"],
+        datasets: [
+          {
+            data: [15, 22, 8],
+            backgroundColor: [
+              colors.police,
+              colors.ambulance,
+              colors.firefighter,
+            ],
+            borderWidth: 1,
+          },
+        ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'right',
+            position: "right",
             labels: {
-              color: '#333',
+              color: "#333",
               font: {
-                weight: 'bold'
-              }
-            }
+                weight: "bold",
+              },
+            },
           },
           tooltip: {
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            titleColor: '#fff',
-            bodyColor: '#fff',
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            titleColor: "#fff",
+            bodyColor: "#fff",
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 return `${context.label}: ${context.raw}`;
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     });
   }
 };
@@ -450,42 +535,42 @@ const initCharts = () => {
 // Métodos de ayuda
 const getEventTypeClass = (type) => {
   const types = {
-    'POLICÍA': 'danger',
-    'AMBULANCIA': 'success',
-    'BOMBEROS': 'warning'
+    POLICÍA: "police",
+    AMBULANCIA: "ambulance",
+    BOMBEROS: "firefighter",
   };
-  return types[type] || 'secondary';
+  return types[type] || "secondary";
 };
 
 const getEventIcon = (type) => {
   const icons = {
-    'POLICÍA': 'bi-shield-fill',
-    'AMBULANCIA': 'bi-ambulance',
-    'BOMBEROS': 'bi-fire'
+    POLICÍA: "bi-shield-fill",
+    AMBULANCIA: "bi-ambulance",
+    BOMBEROS: "bi-fire",
   };
-  return icons[type] || 'bi-exclamation-triangle-fill';
+  return icons[type] || "bi-exclamation-triangle-fill";
 };
 
 const getStatusClass = (status) => {
   const statuses = {
-    'Nuevo': 'danger',
-    'Atendido': 'success',
-    'En proceso': 'warning',
-    'En curso': 'warning',
-    'Resuelto': 'info'
+    Nuevo: "danger",
+    Atendido: "success",
+    "En proceso": "warning",
+    "En curso": "warning",
+    Resuelto: "info",
   };
-  return statuses[status] || 'secondary';
+  return statuses[status] || "secondary";
 };
 
 const getStatusIcon = (status) => {
   const icons = {
-    'Nuevo': 'bi-asterisk',
-    'Atendido': 'bi-check-circle-fill',
-    'En proceso': 'bi-hourglass-split',
-    'En curso': 'bi-arrow-repeat',
-    'Resuelto': 'bi-flag-fill'
+    Nuevo: "bi-asterisk",
+    Atendido: "bi-check-circle-fill",
+    "En proceso": "bi-hourglass-split",
+    "En curso": "bi-arrow-repeat",
+    Resuelto: "bi-flag-fill",
   };
-  return icons[status] || 'bi-question-circle-fill';
+  return icons[status] || "bi-question-circle-fill";
 };
 
 const formatDateTime = (date) => {
@@ -495,7 +580,7 @@ const formatDateTime = (date) => {
 // Ciclo de vida
 onMounted(() => {
   if (!currentUser.value) {
-    router.push('/');
+    router.push("/");
   }
   initCharts();
 });
@@ -533,16 +618,53 @@ onBeforeUnmount(() => {
   border-left-color: var(--bs-primary) !important;
 }
 
+/* Estilos para colores personalizados */
 .police-card {
-  border-left-color: var(--bs-danger) !important;
+  border-left-color: rgb(107, 142, 35) !important;
 }
 
 .ambulance-card {
-  border-left-color: var(--bs-success) !important;
+  border-left-color: rgb(13, 110, 253) !important;
 }
 
 .firefighter-card {
-  border-left-color: var(--bs-warning) !important;
+  border-left-color: rgb(220, 53, 69) !important;
+}
+
+.bg-police {
+  background-color: rgb(107, 142, 35) !important;
+}
+
+.text-police {
+  color: rgb(107, 142, 35) !important;
+}
+
+.bg-police-subtle {
+  background-color: rgba(107, 142, 35, 0.1) !important;
+}
+
+.bg-ambulance {
+  background-color: rgb(13, 110, 253) !important;
+}
+
+.text-ambulance {
+  color: rgb(13, 110, 253) !important;
+}
+
+.bg-ambulance-subtle {
+  background-color: rgba(13, 110, 253, 0.1) !important;
+}
+
+.bg-firefighter {
+  background-color: rgb(220, 53, 69) !important;
+}
+
+.text-firefighter {
+  color: rgb(220, 53, 69) !important;
+}
+
+.bg-firefighter-subtle {
+  background-color: rgba(220, 53, 69, 0.1) !important;
 }
 
 .summary-card .card-value {
