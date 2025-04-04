@@ -10,7 +10,7 @@ import DashboardView from "../views/DashboardView.vue"; // Nueva vista protegida
 
 const routes = [
   { 
-    path: "/login",  
+    path: "/",  
     component: LoginUser, 
     meta: { 
       forGuests: true,
@@ -19,10 +19,11 @@ const routes = [
   },
   { 
     path: "/loginewelink", 
-    component: LoginEwelink,
-    meta: {
-      forGuests: true,
-      hideLayout: true
+    name: "loginewelink",
+    component: LoginEwelink, 
+    meta: { 
+      requiresAuth: true,
+      title: "Inicio de Sesión Ewelink",
     } 
   },
 
