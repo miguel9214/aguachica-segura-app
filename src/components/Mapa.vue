@@ -53,6 +53,30 @@ const redMarkers = [
   { name: 'SIRENA 3', latitude: 8.3096493, longitude: -73.6047024 },
 ];
 
+// Icono azul para usuarios
+const blueIcon = L.icon({
+  iconUrl:
+    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+// Icono rojo para sirenas
+const redIcon = L.icon({
+  iconUrl:
+    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
 // Inicializar el mapa
 onMounted(() => {
   map = L.map('map').setView([8.3060, -73.6181], 14); // Vista inicial de Aguachica
@@ -83,23 +107,12 @@ onMounted(() => {
 
   // Marcadores azules (usuarios)
   users.forEach((user) => {
-    L.marker([user.latitude, user.longitude])
+    L.marker([user.latitude, user.longitude], { icon: blueIcon })
       .addTo(map)
       .bindPopup(user.name);
   });
 
   // Marcadores rojos (sirenas)
-  const redIcon = L.icon({
-    iconUrl:
-      'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-    shadowUrl:
-      'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
-  });
-
   redMarkers.forEach((marker) => {
     L.marker([marker.latitude, marker.longitude], { icon: redIcon })
       .addTo(map)
