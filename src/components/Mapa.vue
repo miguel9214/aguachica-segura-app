@@ -5,21 +5,27 @@
         <!-- Título dinámico -->
         <h1 class="text-center">{{ tituloMapa }}</h1>
 
-        <!-- Select de Departamentos -->
-        <select id="departamento-select" class="form-control mb-3" @change="cargarMunicipios">
-          <option value="">Selecciona un departamento</option>
-          <option v-for="departamento in departamentos" :key="departamento.codigo" :value="departamento.codigo">
-            {{ departamento.nombre }}
-          </option>
-        </select>
-
-        <!-- Select de Municipios -->
-        <select id="municipio-select" class="form-control mb-3" @change="cargarMapa">
-          <option value="">Selecciona un municipio</option>
-          <option v-for="municipio in municipiosFiltrados" :key="municipio.codigo" :value="municipio.codigo">
-            {{ municipio.nombre }}
-          </option>
-        </select>
+        <!-- Filtro de departamentos y municipios en una fila -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <!-- Select de Departamentos -->
+            <select id="departamento-select" class="form-control" @change="cargarMunicipios">
+              <option value="">Selecciona un departamento</option>
+              <option v-for="departamento in departamentos" :key="departamento.codigo" :value="departamento.codigo">
+                {{ departamento.nombre }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <!-- Select de Municipios -->
+            <select id="municipio-select" class="form-control" @change="cargarMapa">
+              <option value="">Selecciona un municipio</option>
+              <option v-for="municipio in municipiosFiltrados" :key="municipio.codigo" :value="municipio.codigo">
+                {{ municipio.nombre }}
+              </option>
+            </select>
+          </div>
+        </div>
 
         <!-- Mapa -->
         <div id="map" style="height: 500px"></div>
@@ -39,6 +45,14 @@ const departamentos = ref(departamentosData);
 const municipiosFiltrados = ref([]); // Municipios filtrados por departamento
 const tituloMapa = ref("Mapa de Colombia"); // Título dinámico del mapa
 let map;
+const markers = {
+  users: [],
+  sirenas: [],
+};
+
+// Filtros de visibilidad
+const mostrarUsuarios = ref(true);
+const mostrarSirenas = ref(true);
 
 // Marcadores de Aguachica
 const users = [
@@ -65,16 +79,13 @@ const blueIcon = L.icon({
   shadowSize: [41, 41],
 });
 
-// Icono rojo para sirenas
-const redIcon = L.icon({
-  iconUrl:
-    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-  shadowUrl:
-    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
+// Icono rojo con Bootstrap (megáfono)
+const redIcon = L.divIcon({
+  className: 'leaflet-megaphone-icon',
+  html: '<i class="bi bi-megaphone-fill" style="font-size: 24px; color: red;"></i>',
+  iconSize: [30, 30],
+  iconAnchor: [15, 30],
+  popupAnchor: [0, -30],
 });
 
 // Inicializar el mapa
@@ -105,20 +116,80 @@ onMounted(() => {
 
   L.control.layers(baseMaps).addTo(map);
 
-  // Marcadores azules (usuarios)
+  // Crear marcadores y almacenarlos
   users.forEach((user) => {
-    L.marker([user.latitude, user.longitude], { icon: blueIcon })
+    const marker = L.marker([user.latitude, user.longitude], { icon: blueIcon })
       .addTo(map)
       .bindPopup(user.name);
+    markers.users.push(marker);
   });
 
-  // Marcadores rojos (sirenas)
   redMarkers.forEach((marker) => {
-    L.marker([marker.latitude, marker.longitude], { icon: redIcon })
+    const redMarker = L.marker([marker.latitude, marker.longitude], { icon: redIcon })
       .addTo(map)
       .bindPopup(marker.name);
+    markers.sirenas.push(redMarker);
   });
+
+  // Agregar los filtros dentro del mapa
+  const filtrosControl = L.control({ position: 'topright' });
+
+  filtrosControl.onAdd = function () {
+    const div = L.DomUtil.create('div', 'leaflet-control-filters');
+    div.innerHTML = `
+      <div style="background-color: white; padding: 10px; border-radius: 5px;">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="filtroUsuarios" checked>
+          <label class="form-check-label" for="filtroUsuarios">
+            Ver Usuarios
+          </label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="filtroSirenas" checked>
+          <label class="form-check-label" for="filtroSirenas">
+            Ver Sirenas
+          </label>
+        </div>
+      </div>
+    `;
+    return div;
+  };
+
+  filtrosControl.addTo(map);
+
+  // Agregar los eventos a los checkboxes
+  document.getElementById('filtroUsuarios').addEventListener('change', (e) => {
+    mostrarUsuarios.value = e.target.checked;
+    actualizarVista();
+  });
+
+  document.getElementById('filtroSirenas').addEventListener('change', (e) => {
+    mostrarSirenas.value = e.target.checked;
+    actualizarVista();
+  });
+
+  // Actualizar la vista inicial con los filtros por defecto
+  actualizarVista();
 });
+
+// Función que maneja la visibilidad de los marcadores
+function actualizarVista() {
+  markers.users.forEach((marker) => {
+    if (mostrarUsuarios.value) {
+      marker.addTo(map);
+    } else {
+      marker.removeFrom(map);
+    }
+  });
+
+  markers.sirenas.forEach((marker) => {
+    if (mostrarSirenas.value) {
+      marker.addTo(map);
+    } else {
+      marker.removeFrom(map);
+    }
+  });
+}
 
 // Cargar municipios según el departamento seleccionado
 function cargarMunicipios(event) {
@@ -146,5 +217,21 @@ function cargarMapa(event) {
 </script>
 
 <style scoped>
-/* Estilos opcionales */
+/* Estilo para ocultar el control cuando no se está apuntando */
+.leaflet-control-filters {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.leaflet-control-filters:hover {
+  opacity: 1;
+}
+
+.leaflet-control-filters:hover .form-check {
+  visibility: visible;
+}
+
+.form-check {
+  visibility: hidden;
+}
 </style>

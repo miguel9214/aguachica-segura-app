@@ -376,24 +376,24 @@ const quickActions = ref([
     color: "primary",
   },
   {
-    title: "Nuevo Reporte",
+    title: "Eventos",
     icon: "bi-plus-circle-fill",
-    path: "/reportes",
+    path: "/eventos",
     color: "success",
   },
   { title: "Despacho", icon: "bi-send-fill", path: "/despacho", color: "info" },
   { title: "Ver Mapa", icon: "bi-map-fill", path: "/mapa", color: "warning" },
   {
-    title: "Configuración",
-    icon: "bi-gear-fill",
-    path: "/settings",
-    color: "secondary",
-  },
-  {
     title: "Reportes",
     icon: "bi-file-earmark-bar-graph-fill",
     path: "/reports",
     color: "danger",
+  },
+  {
+    title: "Configuración",
+    icon: "bi-gear-fill",
+    path: "/settings",
+    color: "secondary",
   },
 ]);
 

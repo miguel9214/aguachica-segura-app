@@ -37,6 +37,7 @@ const darkMode = ref(false);
 const currentPage = ref(1);
 const itemsPerPage = ref(5);
 const loadedUsersCount = ref(0); // Contador de usuarios cargados
+const showHistory = ref(false); // Para mostrar el historial al hacer clic
 
 // Preestablecer "Todos" al cargar la página
 onMounted(() => {
@@ -99,6 +100,8 @@ const simulateEvent = () => {
     userId: selectedUser.value.id,
     description: `Evento generado por ${selectedUser.value.name}`,
     timestamp: getCurrentDateTime(),
+    status: 'En Proceso',  // Agregar el estado al evento
+    statusHistory: [{ status: 'En Proceso', timestamp: getCurrentDateTime() }] // Agregar historial de cambios
   };
   events.value.unshift(newEvent);
   showNotification();
@@ -142,6 +145,12 @@ const prevPage = () => {
   }
 };
 
+const updateEventStatus = (event, newStatus) => {
+  const currentDateTime = getCurrentDateTime();
+  event.status = newStatus;
+  event.statusHistory.push({ status: newStatus, timestamp: currentDateTime });
+};
+
 setInterval(simulateEvent, 3000);
 </script>
 
@@ -149,10 +158,10 @@ setInterval(simulateEvent, 3000);
   <div :class="{ 'dark-mode': darkMode }" class="container-fluid vh-100 p-4">
     <div class="row h-100">
       <!-- Listado de Usuarios -->
-      <div class="col-md-4 h-100 bg-light p-3 border-end">
+      <div class="col-md-4 h-100 bg-light p-3 border-end" style="overflow-y: auto;">
         <h2 class="mb-4">Usuarios</h2>
         <input type="text" class="form-control mb-3" placeholder="Buscar usuarios..." v-model="searchQuery" />
-        <ul class="list-group overflow-auto" style="max-height: 80vh;">
+        <ul class="list-group" style="max-height: 80vh;">
           <li
             v-for="user in users.filter(u => u.name.toLowerCase().includes(searchQuery.toLowerCase()))"
             :key="user.id"
@@ -165,7 +174,7 @@ setInterval(simulateEvent, 3000);
       </div>
 
       <!-- Eventos del Usuario Seleccionado -->
-      <div class="col-md-8 h-100 p-3">
+      <div class="col-md-8 h-100 p-3" style="overflow-y: auto;">
         <h2 class="mb-4">Eventos de {{ selectedUser ? selectedUser.name : '...' }}</h2>
         <div class="d-flex gap-2 mb-4">
           <input type="text" class="form-control" placeholder="Buscar eventos..." v-model="searchQuery" />
@@ -181,7 +190,38 @@ setInterval(simulateEvent, 3000);
           >
             <div class="card-body">
               <p class="card-text">{{ event.description }}</p>
-              <div class="text-muted text-end">{{ event.timestamp }}</div>
+
+              <!-- Si el estado no es "Resuelto", se muestra el select -->
+              <div v-if="event.status !== 'Resuelto'">
+                <select v-model="event.status" class="form-select mt-2" @change="updateEventStatus(event, event.status)">
+                  <option value="Atendido">Atendido</option>
+                  <option value="Resuelto">Resuelto</option>
+                </select>
+              </div>
+            </div>
+            <div class="card-footer text-muted" @click="showHistory = !showHistory">
+              <div class="d-flex justify-content-between">
+                <span>
+                  Estado: <span :class="{'text-success': event.status === 'Resuelto', 'text-warning': event.status === 'En Proceso', 'text-danger': event.status === 'Atendido'}">
+                    {{ event.status }}
+                  </span>
+                </span>
+
+                <!-- Mostrar la fecha de resolución a la izquierda solo si el estado es "Resuelto" -->
+                <span v-if="event.status === 'Resuelto'" class="text-success">
+                   {{ event.statusHistory.find(status => status.status === 'Resuelto').timestamp }}
+                </span>
+              </div>
+
+              <!-- Mostrar el historial al hacer clic -->
+              <div v-if="showHistory" class="mt-2">
+                <h5>Historial de cambios:</h5>
+                <ul>
+                  <li v-for="(history, index) in event.statusHistory" :key="index">
+                    {{ history.status }} - {{ history.timestamp }}
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
           <nav aria-label="Paginación de eventos" class="d-flex justify-content-center mt-4">
@@ -198,7 +238,7 @@ setInterval(simulateEvent, 3000);
             </ul>
           </nav>
         </div>
-        <p v-else class="text-muted">No hay eventos para este usuario.</p>
+        <p v-else>No hay eventos para este usuario.</p>
       </div>
     </div>
   </div>
@@ -233,5 +273,17 @@ setInterval(simulateEvent, 3000);
 
 .dark-mode .text-muted {
   color: #bbb !important;
+}
+
+.text-success {
+  color: green;
+}
+
+.text-warning {
+  color: yellow;
+}
+
+.text-danger {
+  color: red;
 }
 </style>
